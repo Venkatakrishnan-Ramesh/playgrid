@@ -13,8 +13,7 @@ dependencies:
     path: packages/flutter_riverpod
   go_router:
     path: packages/go_router
-  supabase_flutter:
-    path: packages/supabase_flutter
+  supabase_flutter: ^2.12.4
 
 dev_dependencies:
   flutter_test:
