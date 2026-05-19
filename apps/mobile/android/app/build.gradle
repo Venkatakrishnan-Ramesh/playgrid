@@ -18,7 +18,10 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.venkat.playgridclub"
-    compileSdk = flutter.compileSdkVersion
+    // Explicit numbers (not the `flutter.*` Groovy macros) so transitive
+    // Android plugins like `app_links` can resolve them during evaluation
+    // instead of crashing with "compileSdkVersion is not specified".
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -32,8 +35,9 @@ android {
 
     defaultConfig {
         applicationId = "com.venkat.playgridclub"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // supabase_flutter pulls in plugins that require minSdk >= 21.
+        minSdk = 21
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
