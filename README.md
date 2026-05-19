@@ -1,67 +1,75 @@
 # PlayGrid Club
 
-PlayGrid Club is an org-focused sports coordination app for court bookings, open games, groups, tournaments, and admin venue management.
+Monorepo for the PlayGrid Club sports coordination product.
 
-## Tech Stack
+## Layout
 
-- Flutter
-- Riverpod-style local provider layer
-- `go_router`-style local router layer
-- Supabase-compatible backend abstraction
-- Material 3
+```
+playgrid/
+├── apps/
+│   └── mobile/                 Flutter app (Android + iOS)
+├── supabase/
+│   ├── migrations/             SQL schema, RLS, RPCs
+│   │   └── 001_initial_schema.sql
+│   └── seed.sql                Sample sports + venues
+├── docs/
+│   ├── product-spec.md
+│   ├── google-play-launch-checklist.md
+│   ├── privacy-policy-draft.md
+│   └── data-safety-notes.md
+└── .github/
+    └── workflows/
+        └── flutter-ci.yml      analyze + test on every push / PR
+```
 
-## Repo Layout
-
-- `lib/core` - config, router, theme, services, utilities
-- `lib/shared` - reusable models and widgets
-- `lib/features` - feature-first presentation screens
-- `packages` - local offline-resolvable packages for router and providers
-- `android` / `ios` - platform projects
-
-## Setup
-
-1. Install Flutter and make sure the SDK is available.
-2. From `playgrid-mobile`, run:
+## Quick start (mobile app)
 
 ```bash
+cd apps/mobile
 flutter pub get
 flutter analyze
 flutter test
 flutter run
 ```
 
-3. Optional Supabase configuration:
+Without Supabase credentials the app boots against the in-memory mock
+backend seeded from `lib/shared/models/playgrid_mock_data.dart`. To run
+against a real backend:
 
 ```bash
+cd apps/mobile
 flutter run \
   --dart-define=SUPABASE_URL=https://your-project.supabase.co \
   --dart-define=SUPABASE_ANON_KEY=your-anon-key
 ```
 
-If the credentials are not provided, the app uses the built-in mock backend and still runs.
+## Database
 
-## Current MVP Surface
+Apply the schema and seed against a Supabase project:
 
-- Auth: login, signup, forgot password placeholder
-- Profile: profile editing and sports preferences
-- Home: dashboard cards, booking preview, open games preview
-- Sports: catalog and interest selection
-- Venues and bookings: venue list, slot picker, create/cancel booking
-- Games: open games, create/join/leave, waitlist-aware data model
-- Groups: list, detail, join/leave, member placeholder
-- Admin: admin dashboard, venue management placeholder, slot blocking placeholder
-- Notifications: list and in-app placeholder read state
-- Settings: privacy policy placeholder, account deletion request, logout
+```bash
+# from repo root, with the Supabase CLI logged in to the target project
+supabase db push          # applies supabase/migrations/*.sql
+psql "$SUPABASE_DB_URL" -f supabase/seed.sql
+```
 
-## Notes
+`001_initial_schema.sql` is idempotent (uses `create ... if not
+exists`, `do $$ ... if not exists`) so reapplying is safe.
 
-- App package name: `com.venkat.playgridclub`
-- Mock data is enabled automatically when Supabase credentials are missing
-- FCM is intentionally placeholder-only in this MVP
+## CI
 
-## Related Docs
+`flutter-ci.yml` runs from `apps/mobile/`:
 
-- `CONTRIBUTING.md`
-- `launch-checklist-google-play.md`
-- `privacy-policy-draft.md`
-- `data-safety-notes.md`
+1. `flutter pub get`
+2. `dart format --set-exit-if-changed .`
+3. `flutter analyze --fatal-infos`
+4. `flutter test --reporter expanded`
+
+Same commands are the local pre-commit contract.
+
+## Further reading
+
+- Mobile-specific conventions: [`apps/mobile/AGENTS.md`](apps/mobile/AGENTS.md)
+- Contributor workflow: [`apps/mobile/CONTRIBUTING.md`](apps/mobile/CONTRIBUTING.md)
+- Product spec: [`docs/product-spec.md`](docs/product-spec.md)
+- Play Store readiness: [`docs/google-play-launch-checklist.md`](docs/google-play-launch-checklist.md)
