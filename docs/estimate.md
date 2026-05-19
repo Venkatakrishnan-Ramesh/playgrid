@@ -1,39 +1,40 @@
-# PlayGrid Club — Project Estimate
+# PlayGrid Club — Freelance Project Estimate
 
 | | |
 |---|---|
-| **Vendor** | Venkatakrishnan Ramesh |
+| **Freelancer** | Venkatakrishnan Ramesh |
+| **GitHub** | https://github.com/Venkatakrishnan-Ramesh |
+| **Email** | _< add before sending >_ |
 | **Project** | PlayGrid Club — sports coordination mobile app |
-| **Repository** | https://github.com/Venkatakrishnan-Ramesh/playgrid |
-| **Date** | 2026-05-20 |
-| **Quote validity** | 30 days |
-| **Total** | **₹20,000 (INR), inclusive of all taxes** |
+| **Source** | https://github.com/Venkatakrishnan-Ramesh/playgrid |
+| **Quote date** | 2026-05-20 |
+| **Valid for** | 30 days |
+| **Total** | **₹20,000 (flat)** |
+
+This is an independent-contractor engagement. The freelancer is not
+an employee of the client and is responsible for their own taxes.
 
 ---
 
-## 1. What the client receives
+## 1. Deliverables
 
-A working, branded build of PlayGrid Club configured for one
-organization, deployed end-to-end:
+A branded, working build of PlayGrid Club configured for one
+organization:
 
-1. **Android app** signed with an upload keystore, uploaded to a Google
-   Play internal-testing track in the client's Play Console.
+1. **Android app** signed with an upload keystore and uploaded to the
+   client's Google Play internal-testing track.
 2. **Supabase project** provisioned with the schema, RLS policies,
-   booking RPCs, and seed data already in this repo.
-3. **One round of branding** — app name, colour, launcher icon,
-   splash, and content for sports / venues seeded from a list the
-   client provides.
-4. **Source code** in the client's GitHub organization, including:
-   - Flutter app at `apps/mobile/`
-   - SQL migrations at `supabase/migrations/`
-   - CI workflow (`.github/workflows/flutter-ci.yml`)
-   - Docs at `docs/`
-5. **Handover session** — 30-minute screen-share covering how to:
-   - Apply schema changes with the Supabase CLI
-   - Build and ship updates with `flutter build appbundle`
-   - Read CI status on GitHub
+   booking RPCs, and seed data from this repository.
+3. **One round of branding** — app name, primary colour, adaptive
+   launcher icon, splash, and the client's initial sports and venue
+   lists seeded into the database.
+4. **Source code** delivered as a private fork in the client's
+   GitHub organization, including the Flutter app, SQL migrations,
+   CI workflow, and docs.
+5. **30-minute handover screen-share** covering schema changes,
+   building updates, and reading CI status.
 
-## 2. Feature scope (already implemented)
+## 2. What's included (already built)
 
 The price covers the MVP that exists in the repo today. No new
 features are added under this estimate.
@@ -41,136 +42,145 @@ features are added under this estimate.
 | Area | Included |
 |---|---|
 | Auth | Email / password sign-in, signup, password reset placeholder |
-| Profile | Edit name / department / avatar URL, per-sport skill levels |
+| Profile | Name, department, avatar URL, per-sport skill levels |
 | Sports | Browse catalogue, toggle interests |
-| Venues | List, detail, slot picker, **conflict-free booking** via `create_booking_safe` RPC |
-| Bookings | Create, cancel, my-bookings list |
+| Venues + bookings | List, detail, slot picker, **conflict-free booking** via `create_booking_safe` Postgres RPC, cancel |
 | Games | Create open game, join, leave, waitlist data model |
 | Groups | List, detail, join, leave |
-| Events | Tournaments / blocked slots feed |
+| Events / tournaments feed | Read-only |
 | Notifications | In-app list with read state |
 | Admin | Dashboard, manage-venues placeholder, slot-blocking placeholder |
 | Settings | Privacy policy, account-deletion request, sign out |
-| Mock backend | Boots without Supabase credentials for demos and offline dev |
+| Mock backend | Boots without Supabase credentials for demos |
 
-## 3. Branding scope
+## 3. Out of scope at ₹20,000
 
-| Item | Included | Provided by |
-|---|---|---|
-| App display name | ✅ | Client |
-| Android `applicationId` (package name) | ✅ | Client |
-| Primary brand colour | ✅ | Client |
-| Launcher icon (adaptive — foreground + background) | ✅ | Client supplies a 1024×1024 logo; vendor produces adaptive layers |
-| Splash background | ✅ | Vendor |
-| Initial sports list (max 12) | ✅ | Client |
-| Initial venues (max 10) | ✅ | Client |
-| Privacy-policy text + hosting URL | ✅ | Client |
+Requires a separate estimate:
 
-## 4. Out of scope at ₹20,000
-
-Anything below requires a separate estimate before work starts:
-
-- iOS App Store build, signing, and submission (the iOS folder
-  compiles but no Apple Developer enrolment is included)
+- iOS App Store build, signing, or submission
 - Push notifications (FCM is intentionally placeholder)
-- Payment integration (Razorpay / Stripe / UPI)
+- Payments (Razorpay / Stripe / UPI)
 - Image uploads beyond avatar URL strings
-- Real-time presence or live scoreboards
-- Multi-org tenancy / org switcher
-- Web build, desktop build
+- Real-time presence / live scoreboards
+- Multi-org tenancy
+- Web or desktop builds
 - Localization beyond English
-- Custom Flutter screens or DB tables not already in the repo
-- Bug fixes after the 14-day support window in §7
+- Custom screens or DB tables not already in the repo
 - Hosting of the privacy policy or marketing site
-- Play Store listing graphics: feature graphic, phone / tablet
-  screenshots, copywriting (vendor will produce screenshots from the
-  emulator and a 200-word description — anything beyond that is
-  additional)
+- Play Store listing graphics beyond a 200-word description and four
+  emulator screenshots (extended copy, feature graphics, video → add-on)
 
-## 5. Tech stack
+## 4. Branding inputs from client
 
-- Flutter 3.24 stable, Dart 3.5
-- Riverpod 2.6 (state), GoRouter 14.8 (navigation)
-- Supabase 2.12 — Postgres + Auth + RLS
-- GitHub Actions CI: format / analyze / test on every push
-- Android: `compileSdk 34`, `minSdk 21`, `targetSdk 34`, R8 minify on
-  release builds, network security config blocking cleartext
+Required before day 1 of work:
 
-## 6. Timeline
+- App display name and Android package id (e.g. `com.acme.playgrid`)
+- 1024×1024 logo (PNG with transparent background)
+- Primary brand colour (hex code)
+- Initial sports list (up to 12)
+- Initial venues (up to 10, with address + city)
+- Publicly hosted privacy-policy URL
+- Google Play Console access (or invite to add freelancer as a
+  release manager)
+- Supabase organization invite (or Supabase access token if a Pro
+  project already exists)
+
+## 5. Timeline
 
 | Day | Milestone |
 |---|---|
-| 0 | Estimate signed, 50 % advance received |
-| 1 | Client assets received (logo, brand colour, sports list, venues list, privacy URL) |
-| 2 | Supabase project provisioned + schema applied |
-| 3 | Branded build installed on internal-testing track |
+| 0 | Quote signed, ₹10,000 advance received, client assets handed over |
+| 1 | Supabase project provisioned, schema applied, seed data inserted |
+| 2 | Branded debug build installed on a real Android device |
+| 3 | Release AAB uploaded to Play Console internal-testing track |
 | 4 | Handover session, balance invoice |
-| 5–18 | 14-day support window (see §7) |
+| 5–18 | 14-day support window (see §8) |
 
-Slippage caused by missing client assets is not counted against the
-4-business-day delivery commitment.
+Days slip 1:1 with any late client asset. The 4-business-day clock
+starts when **all** items in §4 are received.
 
-## 7. Support window
-
-For 14 calendar days after handover the vendor will fix, free of
-charge, any defect that meets **all** of:
-
-1. Reproducible on the delivered build with the delivered seed data.
-2. Caused by code that lives inside this repository.
-3. Filed as a GitHub issue with reproduction steps and a screenshot or
-   log.
-
-Out of scope of the support window: new features, design changes,
-content changes, anything caused by Supabase configuration the client
-changed after handover.
-
-## 8. Payment
+## 6. Payment
 
 | Stage | Amount | When |
 |---|---|---|
-| Advance | ₹10,000 | On estimate sign-off (before work starts) |
-| Balance | ₹10,000 | On Play Console internal-track upload + source handover |
+| Advance | ₹10,000 | On quote sign-off, before work starts |
+| Balance | ₹10,000 | On Play Console internal-track upload + GitHub handover |
 
-- Indian bank transfer (NEFT / IMPS / UPI) preferred. Invoice issued
-  for both stages.
-- All taxes (including 18 % GST if applicable to the client's billing
-  state) are included in the ₹20,000 total. No hidden fees.
+NEFT / IMPS / UPI to the freelancer's bank account. ₹20,000 is a
+flat fee; no additional charges unless explicitly agreed in writing
+via a separate change-order.
 
-## 9. Assumptions
+## 7. Intellectual property — License, not transfer
 
-- Client owns a Google Play Console account in good standing and has
-  paid the one-time ₹2,000 developer fee. The vendor does not pay
-  this on the client's behalf.
-- Client provides a Supabase organization the vendor can be added to,
-  or a Supabase Pro project the vendor will configure.
-- Client provides a public URL where the privacy policy will live.
-  Hosting that page is not part of this estimate.
-- The repository remains on GitHub. Self-hosted Git (GitLab self-host,
-  Bitbucket DC) requires an additional ₹3,000 to migrate the CI
-  workflow and document the new setup.
+The freelancer retains all copyright and ownership of the source code
+and underlying product, **PlayGrid Club**.
+
+On full payment the client receives:
+
+- A **perpetual, worldwide, non-exclusive, non-transferable license**
+  to use, run, modify, and distribute the delivered build **for the
+  client's own internal organizational use only**.
+- The right to maintain the delivered codebase in the client's
+  private GitHub repository.
+
+The client may **not**:
+
+- Re-sell, sub-license, or distribute the codebase as a product to
+  any third party.
+- Open-source the codebase or any substantial part of it.
+- Use the "PlayGrid" name or branding for any product offered to
+  parties outside the client's organization.
+
+The freelancer is free to continue developing PlayGrid Club, offer it
+to other clients, and ship it as an open-source or SaaS product.
+
+Anything the client supplies (logo, brand colour, sports / venue
+data, privacy text) remains the client's property.
+
+## 8. Support window
+
+For 14 calendar days after handover the freelancer will fix, free of
+charge, any defect that meets **all three** of:
+
+1. Reproducible on the delivered build with the delivered seed data.
+2. Caused by code that lives inside the delivered repository.
+3. Filed as a GitHub issue with reproduction steps + screenshot / log.
+
+After day 14, or for new features, design changes, or content
+changes, the freelancer's hourly rate applies (quoted separately).
+
+## 9. Cancellation and refunds
+
+- If the client cancels before any work has started (day 0): full
+  refund of the advance, minus payment-gateway fees if any.
+- If the client cancels after work has started but before handover:
+  the freelancer keeps the advance; no balance is owed.
+- If the freelancer is unable to deliver within timeline + 10
+  business days of all client assets being received, the client may
+  cancel and receive a full refund of the advance.
+- No refunds after handover.
 
 ## 10. Acceptance criteria
 
-The project is considered complete and the balance invoice is due
-when **all** of the following are demonstrably true:
+The project is complete and the balance invoice is due when **all**
+are demonstrably true:
 
-- [ ] `flutter analyze --fatal-infos` clean on `main`
+- [ ] `flutter analyze --fatal-infos` green on `main`
 - [ ] `flutter test` green on `main`
-- [ ] Branded debug APK installs on a real Android device with no
-      crashes between launch and at least one successful booking
-- [ ] Release AAB uploaded to the Play Console internal-testing track
+- [ ] Branded debug APK installs on a real Android device and
+      completes the login → home → create booking flow without crash
+- [ ] Release AAB uploaded to the Play Console internal track
 - [ ] Schema and seed applied to the client's Supabase project; one
-      admin and one member account exist
-- [ ] Source code lives in the client's GitHub organization with CI
-      green
-- [ ] Handover session completed
+      admin and one member account exist for the client to log in
+- [ ] Source code in the client's GitHub org with CI green
+- [ ] Handover screen-share completed
 
-## 11. Signatures
+## 11. Sign-off
 
 | | |
 |---|---|
 | Client name | _______________________________ |
 | Client signature | _______________________________ |
 | Date | _______________________________ |
-| Vendor signature | Venkatakrishnan Ramesh |
+| Freelancer signature | Venkatakrishnan Ramesh |
 | Date | 2026-05-20 |
