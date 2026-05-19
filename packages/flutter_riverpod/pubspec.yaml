@@ -1,0 +1,14 @@
+name: flutter_riverpod
+description: Lightweight local Riverpod-compatible primitives for PlayGrid Club.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

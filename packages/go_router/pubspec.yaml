@@ -1,0 +1,14 @@
+name: go_router
+description: Lightweight local go_router-compatible router for PlayGrid Club.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
