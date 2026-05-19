@@ -13,7 +13,9 @@ class AppDependencies {
   static late PlayGridRepository repository;
 
   static void initialize(AppConfig config) {
-    authService = config.hasSupabaseCredentials ? SupabaseAuthService() : MockAuthService();
+    authService = config.hasSupabaseCredentials
+        ? SupabaseAuthService()
+        : MockAuthService();
     repository = config.hasSupabaseCredentials
         ? SupabasePlayGridRepository.fromConfig(config)
         : LocalPlayGridRepository();

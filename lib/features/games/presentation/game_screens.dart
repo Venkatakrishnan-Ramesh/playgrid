@@ -30,11 +30,14 @@ class GamesScreen extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (BuildContext context, int index) {
           final Game game = state.games[index];
-          final Sport sport = state.sports.firstWhere((Sport value) => value.id == game.sportId);
-          final Venue venue = state.venues.firstWhere((Venue value) => value.id == game.venueId);
+          final Sport sport = state.sports
+              .firstWhere((Sport value) => value.id == game.sportId);
+          final Venue venue = state.venues
+              .firstWhere((Venue value) => value.id == game.venueId);
           return FeatureCard(
             title: game.title,
-            subtitle: '${sport.name} · ${venue.name} · ${formatTimeRange(game.startsAt, game.endsAt)}',
+            subtitle:
+                '${sport.name} · ${venue.name} · ${formatTimeRange(game.startsAt, game.endsAt)}',
             icon: Icons.emoji_events_outlined,
             trailing: Chip(label: Text(game.status.label)),
             onTap: () => context.go('/games/${game.id}'),
@@ -54,11 +57,15 @@ class GameDetailScreen extends ConsumerWidget {
   Widget buildWithRef(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
     final PlayGridState state = controller.state;
-    final Game game = state.games.firstWhere((Game value) => value.id == gameId);
-    final Sport sport = state.sports.firstWhere((Sport value) => value.id == game.sportId);
-    final Venue venue = state.venues.firstWhere((Venue value) => value.id == game.venueId);
+    final Game game =
+        state.games.firstWhere((Game value) => value.id == gameId);
+    final Sport sport =
+        state.sports.firstWhere((Sport value) => value.id == game.sportId);
+    final Venue venue =
+        state.venues.firstWhere((Venue value) => value.id == game.venueId);
     final bool joined = state.gamePlayers.any(
-      (GamePlayer value) => value.gameId == game.id && value.userId == state.session.userId,
+      (GamePlayer value) =>
+          value.gameId == game.id && value.userId == state.session.userId,
     );
 
     return AppShell(
@@ -73,14 +80,17 @@ class GameDetailScreen extends ConsumerWidget {
             children: <Widget>[
               Chip(label: Text(sport.name)),
               Chip(label: Text(venue.name)),
-              Chip(label: Text(game.waitlistEnabled ? 'Waitlist enabled' : 'Open only')),
+              Chip(
+                  label: Text(
+                      game.waitlistEnabled ? 'Waitlist enabled' : 'Open only')),
             ],
           ),
           const SizedBox(height: 16),
           Card(
             child: ListTile(
               title: Text(formatTimeRange(game.startsAt, game.endsAt)),
-              subtitle: Text('${formatDayMonth(game.startsAt)} · ${game.maxPlayers} max players'),
+              subtitle: Text(
+                  '${formatDayMonth(game.startsAt)} · ${game.maxPlayers} max players'),
             ),
           ),
           const SizedBox(height: 20),
@@ -108,13 +118,16 @@ class CreateGameScreen extends StatefulWidget {
 }
 
 class _CreateGameScreenState extends State<CreateGameScreen> {
-  final TextEditingController _title = TextEditingController(text: 'Friday Night Rally');
-  final TextEditingController _description = TextEditingController(text: 'Open session for mixed skill players.');
+  final TextEditingController _title =
+      TextEditingController(text: 'Friday Night Rally');
+  final TextEditingController _description =
+      TextEditingController(text: 'Open session for mixed skill players.');
   final TextEditingController _maxPlayers = TextEditingController(text: '8');
   String? _sportId;
   String? _venueId;
   final DateTime _startsAt = DateTime.now().add(const Duration(days: 2));
-  final DateTime _endsAt = DateTime.now().add(const Duration(days: 2, hours: 2));
+  final DateTime _endsAt =
+      DateTime.now().add(const Duration(days: 2, hours: 2));
 
   @override
   void dispose() {
@@ -128,7 +141,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
         final List<Sport> sports = controller.state.sports;
         final List<Venue> venues = controller.state.venues;
         _sportId ??= sports.isNotEmpty ? sports.first.id : null;
@@ -138,7 +152,9 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
           title: 'Create game',
           body: ListView(
             children: <Widget>[
-              TextField(controller: _title, decoration: const InputDecoration(labelText: 'Title')),
+              TextField(
+                  controller: _title,
+                  decoration: const InputDecoration(labelText: 'Title')),
               const SizedBox(height: 16),
               TextField(
                 controller: _description,
@@ -150,7 +166,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 value: _sportId,
                 decoration: const InputDecoration(labelText: 'Sport'),
                 items: sports
-                    .map((Sport sport) => DropdownMenuItem<String>(value: sport.id, child: Text(sport.name)))
+                    .map((Sport sport) => DropdownMenuItem<String>(
+                        value: sport.id, child: Text(sport.name)))
                     .toList(),
                 onChanged: (String? value) => setState(() => _sportId = value),
               ),
@@ -159,12 +176,15 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                 value: _venueId,
                 decoration: const InputDecoration(labelText: 'Venue'),
                 items: venues
-                    .map((Venue venue) => DropdownMenuItem<String>(value: venue.id, child: Text(venue.name)))
+                    .map((Venue venue) => DropdownMenuItem<String>(
+                        value: venue.id, child: Text(venue.name)))
                     .toList(),
                 onChanged: (String? value) => setState(() => _venueId = value),
               ),
               const SizedBox(height: 16),
-              TextField(controller: _maxPlayers, decoration: const InputDecoration(labelText: 'Max players')),
+              TextField(
+                  controller: _maxPlayers,
+                  decoration: const InputDecoration(labelText: 'Max players')),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () async {

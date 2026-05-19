@@ -24,7 +24,9 @@ class NotificationsScreen extends ConsumerWidget {
           final NotificationItem item = notifications[index];
           return Card(
             child: ListTile(
-              leading: Icon(item.isRead ? Icons.notifications_none : Icons.notifications_active),
+              leading: Icon(item.isRead
+                  ? Icons.notifications_none
+                  : Icons.notifications_active),
               title: Text(item.title),
               subtitle: Text('${item.body}\n${formatDayMonth(item.createdAt)}'),
               isThreeLine: true,

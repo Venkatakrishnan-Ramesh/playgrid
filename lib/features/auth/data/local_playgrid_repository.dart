@@ -14,7 +14,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
         _groups = List<Group>.from(PlayGridMockData.groups),
         _groupMembers = List<GroupMember>.from(PlayGridMockData.groupMembers),
         _events = List<EventItem>.from(PlayGridMockData.events),
-        _notifications = List<NotificationItem>.from(PlayGridMockData.notifications);
+        _notifications =
+            List<NotificationItem>.from(PlayGridMockData.notifications);
 
   final List<Sport> _sports;
   final List<Venue> _venues;
@@ -29,7 +30,9 @@ class LocalPlayGridRepository implements PlayGridRepository {
 
   PlayGridState _stateFor(PlayGridSession session, {AppUserProfile? profile}) {
     return PlayGridState(
-      session: session.copyWith(profileComplete: profile != null, role: profile?.role ?? session.role),
+      session: session.copyWith(
+          profileComplete: profile != null,
+          role: profile?.role ?? session.role),
       profile: profile,
       sports: List<Sport>.unmodifiable(_sports),
       venues: List<Venue>.unmodifiable(_venues),
@@ -52,7 +55,9 @@ class LocalPlayGridRepository implements PlayGridRepository {
     }
     return PlayGridMockData.memberProfile.copyWith(
       id: session.userId,
-      email: session.email.isEmpty ? PlayGridMockData.memberProfile.email : session.email,
+      email: session.email.isEmpty
+          ? PlayGridMockData.memberProfile.email
+          : session.email,
     );
   }
 
@@ -103,19 +108,24 @@ class LocalPlayGridRepository implements PlayGridRepository {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-    final List<SportPreference> preferences =
-        baseProfile.skills.where((item) => item.sportId != sportId).toList(growable: true);
+    final List<SportPreference> preferences = baseProfile.skills
+        .where((item) => item.sportId != sportId)
+        .toList(growable: true);
     if (selected) {
       preferences.add(
         SportPreference(
           sportId: sportId,
-          skillLevel: skillLevel ?? (baseProfile.skills.isNotEmpty ? baseProfile.skills.first.skillLevel : SkillLevel.beginner),
+          skillLevel: skillLevel ??
+              (baseProfile.skills.isNotEmpty
+                  ? baseProfile.skills.first.skillLevel
+                  : SkillLevel.beginner),
         ),
       );
     }
     return _stateFor(
       session.copyWith(profileComplete: true),
-      profile: baseProfile.copyWith(skills: preferences, updatedAt: DateTime.now()),
+      profile:
+          baseProfile.copyWith(skills: preferences, updatedAt: DateTime.now()),
     );
   }
 
@@ -136,7 +146,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
           booking.startAt.isBefore(endAt),
     );
     if (conflict) {
-      throw const AppFailure('That slot overlaps an existing confirmed booking.');
+      throw const AppFailure(
+          'That slot overlaps an existing confirmed booking.');
     }
     _bookings.add(
       Booking(
@@ -205,7 +216,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
     required PlayGridSession session,
     required String gameId,
   }) async {
-    final alreadyJoined = _gamePlayers.any((item) => item.gameId == gameId && item.userId == session.userId);
+    final alreadyJoined = _gamePlayers
+        .any((item) => item.gameId == gameId && item.userId == session.userId);
     if (!alreadyJoined) {
       _gamePlayers.add(
         GamePlayer(
@@ -224,7 +236,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
     required PlayGridSession session,
     required String gameId,
   }) async {
-    _gamePlayers.removeWhere((item) => item.gameId == gameId && item.userId == session.userId);
+    _gamePlayers.removeWhere(
+        (item) => item.gameId == gameId && item.userId == session.userId);
     return _stateFor(session, profile: _profileFor(session));
   }
 
@@ -233,8 +246,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
     required PlayGridSession session,
     required String groupId,
   }) async {
-    final alreadyMember =
-        _groupMembers.any((item) => item.groupId == groupId && item.userId == session.userId);
+    final alreadyMember = _groupMembers.any(
+        (item) => item.groupId == groupId && item.userId == session.userId);
     if (!alreadyMember) {
       _groupMembers.add(
         GroupMember(
@@ -253,7 +266,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
     required PlayGridSession session,
     required String groupId,
   }) async {
-    _groupMembers.removeWhere((item) => item.groupId == groupId && item.userId == session.userId);
+    _groupMembers.removeWhere(
+        (item) => item.groupId == groupId && item.userId == session.userId);
     return _stateFor(session, profile: _profileFor(session));
   }
 
@@ -262,7 +276,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
     required PlayGridSession session,
     required String notificationId,
   }) async {
-    final index = _notifications.indexWhere((item) => item.id == notificationId);
+    final index =
+        _notifications.indexWhere((item) => item.id == notificationId);
     if (index != -1) {
       _notifications[index] = _notifications[index].copyWith(isRead: true);
     }
@@ -280,12 +295,15 @@ class LocalPlayGridRepository implements PlayGridRepository {
         id: 'notification-${DateTime.now().microsecondsSinceEpoch}',
         userId: session.userId,
         title: 'Account deletion requested',
-        body: reason.trim().isEmpty ? 'A deletion request was submitted.' : reason.trim(),
+        body: reason.trim().isEmpty
+            ? 'A deletion request was submitted.'
+            : reason.trim(),
         type: NotificationType.system,
         isRead: false,
         createdAt: DateTime.now(),
       ),
     );
-    return _stateFor(session, profile: _profileFor(session)).copyWith(message: 'Deletion request submitted.');
+    return _stateFor(session, profile: _profileFor(session))
+        .copyWith(message: 'Deletion request submitted.');
   }
 }

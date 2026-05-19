@@ -28,7 +28,8 @@ class VenueListScreen extends ConsumerWidget {
           final Venue venue = venues[index];
           return FeatureCard(
             title: venue.name,
-            subtitle: '${venue.location} · ${venue.surfaceType} · ${venue.capacity} pax',
+            subtitle:
+                '${venue.location} · ${venue.surfaceType} · ${venue.capacity} pax',
             icon: Icons.stadium_outlined,
             onTap: () => context.go('/venues/${venue.id}'),
           );
@@ -46,7 +47,8 @@ class VenueDetailScreen extends ConsumerWidget {
   @override
   Widget buildWithRef(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
-    final Venue venue = controller.state.venues.firstWhere((Venue value) => value.id == venueId);
+    final Venue venue = controller.state.venues
+        .firstWhere((Venue value) => value.id == venueId);
     final List<VenueSlot> slots = controller.state.venueSlots
         .where((VenueSlot slot) => slot.venueId == venueId)
         .toList();
@@ -63,7 +65,8 @@ class VenueDetailScreen extends ConsumerWidget {
         children: <Widget>[
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: Image.network(venue.imageUrl, height: 220, fit: BoxFit.cover),
+            child:
+                Image.network(venue.imageUrl, height: 220, fit: BoxFit.cover),
           ),
           const SizedBox(height: 16),
           Text(venue.location, style: Theme.of(context).textTheme.titleMedium),
@@ -80,7 +83,8 @@ class VenueDetailScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Text('Available slots', style: Theme.of(context).textTheme.titleLarge),
+          Text('Available slots',
+              style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
           ...slots.map(
             (VenueSlot slot) => Card(
@@ -90,10 +94,14 @@ class VenueDetailScreen extends ConsumerWidget {
                   '${formatDayMonth(slot.startAt)} · ${formatTimeRange(slot.startAt, slot.endAt)}',
                 ),
                 trailing: Icon(
-                  slot.isAvailable ? Icons.check_circle_outline : Icons.block_outlined,
+                  slot.isAvailable
+                      ? Icons.check_circle_outline
+                      : Icons.block_outlined,
                   color: slot.isAvailable ? Colors.green : Colors.red,
                 ),
-                onTap: slot.isAvailable ? () => context.go('/bookings/create/${venue.id}') : null,
+                onTap: slot.isAvailable
+                    ? () => context.go('/bookings/create/${venue.id}')
+                    : null,
               ),
             ),
           ),
@@ -118,7 +126,8 @@ class CreateBookingScreen extends StatefulWidget {
 }
 
 class _CreateBookingScreenState extends State<CreateBookingScreen> {
-  final TextEditingController _notes = TextEditingController(text: 'Team practice');
+  final TextEditingController _notes =
+      TextEditingController(text: 'Team practice');
   String? _selectedSlotId;
   String? _selectedSportId;
 
@@ -132,11 +141,13 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
-        final Venue venue =
-            controller.state.venues.firstWhere((Venue value) => value.id == widget.venueId);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
+        final Venue venue = controller.state.venues
+            .firstWhere((Venue value) => value.id == widget.venueId);
         final List<VenueSlot> slots = controller.state.venueSlots
-            .where((VenueSlot slot) => slot.venueId == widget.venueId && slot.isAvailable)
+            .where((VenueSlot slot) =>
+                slot.venueId == widget.venueId && slot.isAvailable)
             .toList();
         final List<Sport> sports = controller.state.sports;
         _selectedSlotId ??= slots.isNotEmpty ? slots.first.id : null;
@@ -146,7 +157,8 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
           title: 'Book ${venue.name}',
           body: ListView(
             children: <Widget>[
-              Text(venue.location, style: Theme.of(context).textTheme.titleMedium),
+              Text(venue.location,
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
               const Text('Pick a slot and sport for a confirmed booking.'),
               const SizedBox(height: 20),
@@ -159,7 +171,8 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                       (Sport sport) => ChoiceChip(
                         label: Text(sport.name),
                         selected: _selectedSportId == sport.id,
-                        onSelected: (_) => setState(() => _selectedSportId = sport.id),
+                        onSelected: (_) =>
+                            setState(() => _selectedSportId = sport.id),
                       ),
                     )
                     .toList(),
@@ -175,7 +188,8 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
                       (VenueSlot slot) => FilterChip(
                         label: Text(slot.label),
                         selected: _selectedSlotId == slot.id,
-                        onSelected: (_) => setState(() => _selectedSlotId = slot.id),
+                        onSelected: (_) =>
+                            setState(() => _selectedSlotId = slot.id),
                       ),
                     )
                     .toList(),
@@ -189,8 +203,8 @@ class _CreateBookingScreenState extends State<CreateBookingScreen> {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () async {
-                  final VenueSlot slot =
-                      slots.firstWhere((VenueSlot item) => item.id == _selectedSlotId);
+                  final VenueSlot slot = slots.firstWhere(
+                      (VenueSlot item) => item.id == _selectedSlotId);
                   await controller.createBooking(
                     venueId: widget.venueId,
                     sportId: _selectedSportId ?? sports.first.id,
@@ -220,7 +234,8 @@ class MyBookingsScreen extends ConsumerWidget {
   Widget buildWithRef(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
     final PlayGridState state = controller.state;
-    final List<Booking> bookings = state.upcomingBookingsFor(state.session.userId);
+    final List<Booking> bookings =
+        state.upcomingBookingsFor(state.session.userId);
 
     return AppShell(
       title: 'My Bookings',
@@ -229,8 +244,10 @@ class MyBookingsScreen extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (BuildContext context, int index) {
           final Booking booking = bookings[index];
-          final Venue venue = state.venues.firstWhere((Venue value) => value.id == booking.venueId);
-          final Sport sport = state.sports.firstWhere((Sport value) => value.id == booking.sportId);
+          final Venue venue = state.venues
+              .firstWhere((Venue value) => value.id == booking.venueId);
+          final Sport sport = state.sports
+              .firstWhere((Sport value) => value.id == booking.sportId);
           return Card(
             child: ListTile(
               title: Text('${sport.name} at ${venue.name}'),

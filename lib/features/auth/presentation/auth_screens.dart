@@ -25,8 +25,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _email = TextEditingController(text: 'arjun@acme.com');
-  final TextEditingController _password = TextEditingController(text: 'password123');
+  final TextEditingController _email =
+      TextEditingController(text: 'arjun@acme.com');
+  final TextEditingController _password =
+      TextEditingController(text: 'password123');
   String? _error;
 
   @override
@@ -40,7 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
         return Scaffold(
           body: SafeArea(
             child: Center(
@@ -54,26 +57,38 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: <Widget>[
-                          Text('PlayGrid Club', style: Theme.of(context).textTheme.headlineMedium),
+                          Text('PlayGrid Club',
+                              style:
+                                  Theme.of(context).textTheme.headlineMedium),
                           const SizedBox(height: 8),
-                          const Text('Sign in to coordinate games, venues, and tournaments.'),
+                          const Text(
+                              'Sign in to coordinate games, venues, and tournaments.'),
                           const SizedBox(height: 24),
-                          TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
+                          TextField(
+                              controller: _email,
+                              decoration:
+                                  const InputDecoration(labelText: 'Email')),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _password,
-                            decoration: const InputDecoration(labelText: 'Password'),
+                            decoration:
+                                const InputDecoration(labelText: 'Password'),
                             obscureText: true,
                           ),
                           if (_error != null) ...<Widget>[
                             const SizedBox(height: 12),
-                            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                            Text(_error!,
+                                style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.error)),
                           ],
                           const SizedBox(height: 24),
                           FilledButton(
                             onPressed: () async {
                               try {
-                                await controller.signIn(email: _email.text, password: _password.text);
+                                await controller.signIn(
+                                    email: _email.text,
+                                    password: _password.text);
                                 if (context.mounted) {
                                   context.go(RoutePaths.home);
                                 }
@@ -88,7 +103,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: const Text('Create an account'),
                           ),
                           TextButton(
-                            onPressed: () => context.go(RoutePaths.forgotPassword),
+                            onPressed: () =>
+                                context.go(RoutePaths.forgotPassword),
                             child: const Text('Forgot password?'),
                           ),
                         ],
@@ -115,7 +131,8 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _name = TextEditingController(text: 'New Player');
   final TextEditingController _email = TextEditingController();
-  final TextEditingController _password = TextEditingController(text: 'password123');
+  final TextEditingController _password =
+      TextEditingController(text: 'password123');
   String? _error;
 
   @override
@@ -130,15 +147,20 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
         return Scaffold(
           appBar: AppBar(title: const Text('Create account')),
           body: ListView(
             padding: const EdgeInsets.all(24),
             children: <Widget>[
-              TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
+              TextField(
+                  controller: _name,
+                  decoration: const InputDecoration(labelText: 'Name')),
               const SizedBox(height: 16),
-              TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
+              TextField(
+                  controller: _email,
+                  decoration: const InputDecoration(labelText: 'Email')),
               const SizedBox(height: 16),
               TextField(
                 controller: _password,
@@ -147,13 +169,18 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               if (_error != null) ...<Widget>[
                 const SizedBox(height: 12),
-                Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(_error!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () async {
                   try {
-                    await controller.signUp(name: _name.text, email: _email.text, password: _password.text);
+                    await controller.signUp(
+                        name: _name.text,
+                        email: _email.text,
+                        password: _password.text);
                     if (context.mounted) {
                       context.go(RoutePaths.profileSetup);
                     }
@@ -192,7 +219,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
         return Scaffold(
           appBar: AppBar(title: const Text('Reset password')),
           body: ListView(
@@ -200,12 +228,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             children: <Widget>[
               const Text('Password reset is a placeholder flow for the MVP.'),
               const SizedBox(height: 16),
-              TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email')),
+              TextField(
+                  controller: _email,
+                  decoration: const InputDecoration(labelText: 'Email')),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () async {
                   await controller.sendPasswordReset(email: _email.text);
-                  setState(() => _message = 'Reset instructions sent if the email exists.');
+                  setState(() => _message =
+                      'Reset instructions sent if the email exists.');
                 },
                 child: const Text('Send reset link'),
               ),
@@ -246,7 +277,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
         final PlayGridState state = controller.state;
         final AppUserProfile? profile = state.profile;
 
@@ -259,7 +291,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         if (_avatarUrl.text.isEmpty) {
           _avatarUrl.text = profile?.avatarUrl ?? '';
         }
-        for (final SportPreference skill in profile?.skills ?? const <SportPreference>[]) {
+        for (final SportPreference skill
+            in profile?.skills ?? const <SportPreference>[]) {
           _selectedSports.putIfAbsent(skill.sportId, () => skill.skillLevel);
         }
 
@@ -268,19 +301,27 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           body: ListView(
             padding: const EdgeInsets.all(24),
             children: <Widget>[
-              TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
+              TextField(
+                  controller: _name,
+                  decoration: const InputDecoration(labelText: 'Name')),
               const SizedBox(height: 16),
-              TextField(controller: _department, decoration: const InputDecoration(labelText: 'Department')),
+              TextField(
+                  controller: _department,
+                  decoration: const InputDecoration(labelText: 'Department')),
               const SizedBox(height: 16),
-              TextField(controller: _avatarUrl, decoration: const InputDecoration(labelText: 'Avatar URL')),
+              TextField(
+                  controller: _avatarUrl,
+                  decoration: const InputDecoration(labelText: 'Avatar URL')),
               const SizedBox(height: 24),
-              Text('Sports interests', style: Theme.of(context).textTheme.titleMedium),
+              Text('Sports interests',
+                  style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: state.sports.map((Sport sport) {
-                  final SkillLevel current = _selectedSports[sport.id] ?? SkillLevel.beginner;
+                  final SkillLevel current =
+                      _selectedSports[sport.id] ?? SkillLevel.beginner;
                   return InputChip(
                     label: Text('${sport.name} · ${current.label}'),
                     selected: _selectedSports.containsKey(sport.id),
@@ -300,20 +341,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               const SizedBox(height: 24),
               FilledButton(
                 onPressed: () async {
-                  final List<SportPreference> preferences = _selectedSports.entries
-                      .map(
-                        (MapEntry<String, SkillLevel> entry) => SportPreference(
-                          sportId: entry.key,
-                          skillLevel: entry.value,
-                        ),
-                      )
-                      .toList(growable: false);
+                  final List<SportPreference> preferences =
+                      _selectedSports.entries
+                          .map(
+                            (MapEntry<String, SkillLevel> entry) =>
+                                SportPreference(
+                              sportId: entry.key,
+                              skillLevel: entry.value,
+                            ),
+                          )
+                          .toList(growable: false);
 
                   await controller.saveProfile(
                     name: _name.text,
                     department: _department.text,
                     avatarUrl: _avatarUrl.text.isEmpty ? null : _avatarUrl.text,
-                    skillLevel: preferences.isEmpty ? SkillLevel.beginner : preferences.first.skillLevel,
+                    skillLevel: preferences.isEmpty
+                        ? SkillLevel.beginner
+                        : preferences.first.skillLevel,
                     sportsPreferences: preferences,
                   );
                   if (context.mounted) {

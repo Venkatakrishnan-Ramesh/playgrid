@@ -6,4 +6,3 @@ class AppFailure implements Exception {
   @override
   String toString() => message;
 }
-

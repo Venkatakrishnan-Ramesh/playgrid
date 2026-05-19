@@ -65,7 +65,8 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
   Widget build(BuildContext context) {
     return Consumer(
       builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final PlayGridController controller = ref.watch(playGridControllerProvider);
+        final PlayGridController controller =
+            ref.watch(playGridControllerProvider);
         return AppShell(
           title: 'Account deletion',
           body: ListView(
@@ -85,7 +86,8 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
                     return;
                   }
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Deletion request submitted.')),
+                    const SnackBar(
+                        content: Text('Deletion request submitted.')),
                   );
                 },
                 child: const Text('Request deletion'),

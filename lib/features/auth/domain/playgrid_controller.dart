@@ -38,10 +38,12 @@ class PlayGridController extends ChangeNotifier {
   List<EventItem> get events => _state.events;
   List<NotificationItem> get notifications => _state.notifications;
   List<VenueSlot> get venueSlots => _state.venueSlots;
-  List<Booking> get myBookings => _state.upcomingBookingsFor(_state.session.userId);
+  List<Booking> get myBookings =>
+      _state.upcomingBookingsFor(_state.session.userId);
   List<Game> get openGames => _state.openGames();
-  List<NotificationItem> get myNotifications =>
-      _state.notifications.where((item) => item.userId == _state.session.userId).toList(growable: false);
+  List<NotificationItem> get myNotifications => _state.notifications
+      .where((item) => item.userId == _state.session.userId)
+      .toList(growable: false);
 
   set _setState(PlayGridState value) {
     _state = value;
@@ -49,7 +51,8 @@ class PlayGridController extends ChangeNotifier {
   }
 
   Future<void> bootstrap() async {
-    _setState = _state.copyWith(loading: true, message: 'Preparing PlayGrid Club...');
+    _setState =
+        _state.copyWith(loading: true, message: 'Preparing PlayGrid Club...');
     final PlayGridSession session = await _authService.currentSession();
     final PlayGridState data = await _repository.bootstrap(session: session);
     _setState = data.copyWith(loading: false);
@@ -80,7 +83,8 @@ class PlayGridController extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      _setState = _state.copyWith(loading: true, message: 'Creating account...');
+      _setState =
+          _state.copyWith(loading: true, message: 'Creating account...');
       final PlayGridSession session = await _authService.signUp(
         name: name,
         email: email,
@@ -190,19 +194,23 @@ class PlayGridController extends ChangeNotifier {
   }
 
   Future<void> joinGame(String gameId) async {
-    _setState = await _repository.joinGame(session: _state.session, gameId: gameId);
+    _setState =
+        await _repository.joinGame(session: _state.session, gameId: gameId);
   }
 
   Future<void> leaveGame(String gameId) async {
-    _setState = await _repository.leaveGame(session: _state.session, gameId: gameId);
+    _setState =
+        await _repository.leaveGame(session: _state.session, gameId: gameId);
   }
 
   Future<void> joinGroup(String groupId) async {
-    _setState = await _repository.joinGroup(session: _state.session, groupId: groupId);
+    _setState =
+        await _repository.joinGroup(session: _state.session, groupId: groupId);
   }
 
   Future<void> leaveGroup(String groupId) async {
-    _setState = await _repository.leaveGroup(session: _state.session, groupId: groupId);
+    _setState =
+        await _repository.leaveGroup(session: _state.session, groupId: groupId);
   }
 
   Future<void> markNotificationRead(String notificationId) async {

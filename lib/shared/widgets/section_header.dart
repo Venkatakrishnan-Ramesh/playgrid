@@ -24,10 +24,14 @@ class SectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+              Text(title,
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800)),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
-                Text(subtitle!, style: theme.textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+                Text(subtitle!,
+                    style: theme.textTheme.bodyMedium
+                        ?.copyWith(color: Colors.black54)),
               ],
             ],
           ),

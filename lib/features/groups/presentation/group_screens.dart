@@ -45,9 +45,11 @@ class GroupDetailScreen extends ConsumerWidget {
   Widget buildWithRef(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
     final PlayGridState state = controller.state;
-    final Group group = state.groups.firstWhere((Group value) => value.id == groupId);
+    final Group group =
+        state.groups.firstWhere((Group value) => value.id == groupId);
     final bool joined = state.groupMembers.any(
-      (GroupMember member) => member.groupId == group.id && member.userId == state.session.userId,
+      (GroupMember member) =>
+          member.groupId == group.id && member.userId == state.session.userId,
     );
 
     return AppShell(
@@ -59,16 +61,19 @@ class GroupDetailScreen extends ConsumerWidget {
           Chip(label: Text(group.isPublic ? 'Public' : 'Private')),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: joined ? null : () async => controller.joinGroup(group.id),
+            onPressed:
+                joined ? null : () async => controller.joinGroup(group.id),
             child: Text(joined ? 'Joined' : 'Join group'),
           ),
           const SizedBox(height: 20),
-          Text('Member list placeholder', style: Theme.of(context).textTheme.titleMedium),
+          Text('Member list placeholder',
+              style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           const Card(
             child: ListTile(
               title: Text('Member directory'),
-              subtitle: Text('This MVP reserves the layout for a real roster in the next iteration.'),
+              subtitle: Text(
+                  'This MVP reserves the layout for a real roster in the next iteration.'),
             ),
           ),
         ],

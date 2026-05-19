@@ -17,7 +17,8 @@ class HomeScreen extends ConsumerWidget {
   Widget buildWithRef(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
     final PlayGridState state = controller.state;
-    final List<Booking> upcoming = state.upcomingBookingsFor(state.session.userId);
+    final List<Booking> upcoming =
+        state.upcomingBookingsFor(state.session.userId);
     final List<Game> openGames = state.openGames();
 
     return MainShell(
@@ -33,7 +34,10 @@ class HomeScreen extends ConsumerWidget {
         children: <Widget>[
           Text(
             'Your sports coordination hub',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -86,12 +90,14 @@ class HomeScreen extends ConsumerWidget {
             const _EmptyPreview(title: 'No upcoming bookings yet')
           else
             ...upcoming.take(1).map(
-              (Booking booking) => _BookingPreview(
-                booking: booking,
-                venue: state.venues.firstWhere((Venue venue) => venue.id == booking.venueId),
-                sport: state.sports.firstWhere((Sport sport) => sport.id == booking.sportId),
-              ),
-            ),
+                  (Booking booking) => _BookingPreview(
+                    booking: booking,
+                    venue: state.venues.firstWhere(
+                        (Venue venue) => venue.id == booking.venueId),
+                    sport: state.sports.firstWhere(
+                        (Sport sport) => sport.id == booking.sportId),
+                  ),
+                ),
           const SizedBox(height: 24),
           SectionHeader(
             title: 'Open games',
@@ -106,13 +112,15 @@ class HomeScreen extends ConsumerWidget {
             const _EmptyPreview(title: 'No open games currently')
           else
             ...openGames.take(2).map(
-              (Game game) => _OpenGameCard(
-                game: game,
-                sport: state.sports.firstWhere((Sport sport) => sport.id == game.sportId),
-                venue: state.venues.firstWhere((Venue venue) => venue.id == game.venueId),
-                onTap: () => context.go('/games/${game.id}'),
-              ),
-            ),
+                  (Game game) => _OpenGameCard(
+                    game: game,
+                    sport: state.sports
+                        .firstWhere((Sport sport) => sport.id == game.sportId),
+                    venue: state.venues
+                        .firstWhere((Venue venue) => venue.id == game.venueId),
+                    onTap: () => context.go('/games/${game.id}'),
+                  ),
+                ),
         ],
       ),
     );
@@ -162,7 +170,8 @@ class _BookingPreview extends StatelessWidget {
     return Card(
       child: ListTile(
         title: Text('${sport.name} at ${venue.name}'),
-        subtitle: Text('${formatDayMonth(booking.startAt)} · ${formatTimeRange(booking.startAt, booking.endAt)}'),
+        subtitle: Text(
+            '${formatDayMonth(booking.startAt)} · ${formatTimeRange(booking.startAt, booking.endAt)}'),
         trailing: Chip(label: Text(booking.status.label)),
       ),
     );
@@ -188,7 +197,8 @@ class _OpenGameCard extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         title: Text(game.title),
-        subtitle: Text('${sport.name} · ${venue.name} · ${formatTimeRange(game.startsAt, game.endsAt)}'),
+        subtitle: Text(
+            '${sport.name} · ${venue.name} · ${formatTimeRange(game.startsAt, game.endsAt)}'),
         trailing: const Icon(Icons.chevron_right),
       ),
     );

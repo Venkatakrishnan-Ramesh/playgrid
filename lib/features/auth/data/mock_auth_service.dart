@@ -31,7 +31,9 @@ class MockAuthService implements AuthService {
     required String email,
     required String password,
   }) async {
-    if (name.trim().isEmpty || email.trim().isEmpty || password.trim().length < 6) {
+    if (name.trim().isEmpty ||
+        email.trim().isEmpty ||
+        password.trim().length < 6) {
       throw const AppFailure('Complete the signup form with valid data.');
     }
     _session = PlayGridSession(

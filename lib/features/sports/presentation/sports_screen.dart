@@ -13,7 +13,10 @@ class SportsScreen extends ConsumerWidget {
   Widget buildWithRef(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
     final PlayGridState state = controller.state;
-    final selected = state.profile?.skills.map((SportPreference item) => item.sportId).toSet() ?? <String>{};
+    final selected = state.profile?.skills
+            .map((SportPreference item) => item.sportId)
+            .toSet() ??
+        <String>{};
 
     return AppShell(
       title: 'Sports',
@@ -26,7 +29,9 @@ class SportsScreen extends ConsumerWidget {
             title: sport.name,
             subtitle: sport.icon,
             icon: Icons.sports,
-            trailing: Chip(label: Text(selected.contains(sport.id) ? 'Selected' : 'Available')),
+            trailing: Chip(
+                label: Text(
+                    selected.contains(sport.id) ? 'Selected' : 'Available')),
           );
         },
       ),

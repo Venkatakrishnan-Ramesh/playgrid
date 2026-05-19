@@ -116,7 +116,8 @@ class AppUserProfile {
 }
 
 extension AppUserProfileCompat on AppUserProfile {
-  SkillLevel get skillLevel => skills.isEmpty ? SkillLevel.beginner : skills.first.skillLevel;
+  SkillLevel get skillLevel =>
+      skills.isEmpty ? SkillLevel.beginner : skills.first.skillLevel;
 
   List<SportPreference> get sportsPreferences => skills;
 }
@@ -202,7 +203,8 @@ class Booking {
   final DateTime createdAt;
   final String notes;
 
-  bool get isActive => status == BookingStatus.confirmed || status == BookingStatus.pending;
+  bool get isActive =>
+      status == BookingStatus.confirmed || status == BookingStatus.pending;
 
   Booking copyWith({
     String? id,
@@ -493,7 +495,8 @@ class PlayGridState {
 
   List<Booking> upcomingBookingsFor(String userId) {
     return bookings
-        .where((Booking booking) => booking.userId == userId && booking.isActive)
+        .where(
+            (Booking booking) => booking.userId == userId && booking.isActive)
         .toList()
       ..sort((Booking a, Booking b) => a.startAt.compareTo(b.startAt));
   }

@@ -38,7 +38,8 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        Text(profile?.name ?? 'Guest user', style: Theme.of(context).textTheme.titleLarge),
+                        Text(profile?.name ?? 'Guest user',
+                            style: Theme.of(context).textTheme.titleLarge),
                         Text(profile?.email ?? state.session.email),
                         Text(profile?.department ?? 'Department not set'),
                       ],
@@ -54,10 +55,15 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: profile == null
                 ? 'Set your favorite sports in profile setup'
                 : profile.skills.map((SportPreference skill) {
-                    final Sport? sport = state.sports.where((Sport value) => value.id == skill.sportId).isEmpty
+                    final Sport? sport = state.sports
+                            .where((Sport value) => value.id == skill.sportId)
+                            .isEmpty
                         ? null
-                        : state.sports.firstWhere((Sport value) => value.id == skill.sportId);
-                    return sport == null ? skill.skillLevel.label : '${sport.name} · ${skill.skillLevel.label}';
+                        : state.sports.firstWhere(
+                            (Sport value) => value.id == skill.sportId);
+                    return sport == null
+                        ? skill.skillLevel.label
+                        : '${sport.name} · ${skill.skillLevel.label}';
                   }).join(' • '),
             icon: Icons.sports_tennis,
             onTap: () => context.go(RoutePaths.sports),

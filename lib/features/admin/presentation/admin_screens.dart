@@ -52,7 +52,8 @@ class ManageVenuesScreen extends StatelessWidget {
     return const AppShell(
       title: 'Manage venues',
       body: Center(
-        child: Text('Add/edit venue placeholder and blocked slot management will live here.'),
+        child: Text(
+            'Add/edit venue placeholder and blocked slot management will live here.'),
       ),
     );
   }

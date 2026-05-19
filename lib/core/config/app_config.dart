@@ -12,7 +12,10 @@ class AppConfig {
   final String? supabaseAnonKey;
 
   bool get hasSupabaseCredentials =>
-      supabaseUrl != null && supabaseUrl!.isNotEmpty && supabaseAnonKey != null && supabaseAnonKey!.isNotEmpty;
+      supabaseUrl != null &&
+      supabaseUrl!.isNotEmpty &&
+      supabaseAnonKey != null &&
+      supabaseAnonKey!.isNotEmpty;
 
   factory AppConfig.fromEnvironment() {
     const url = String.fromEnvironment('SUPABASE_URL');

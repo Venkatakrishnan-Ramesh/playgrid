@@ -44,13 +44,24 @@ class FeatureCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                    Text(title,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    Text(subtitle, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54)),
+                    Text(subtitle,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: Colors.black54)),
                   ],
                 ),
               ),
-              if (trailing != null) trailing! else const Icon(Icons.chevron_right_rounded),
+              if (trailing != null)
+                trailing!
+              else
+                const Icon(Icons.chevron_right_rounded),
             ],
           ),
         ),

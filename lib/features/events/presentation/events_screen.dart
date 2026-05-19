@@ -24,7 +24,8 @@ class EventsScreen extends ConsumerWidget {
           return Card(
             child: ListTile(
               title: Text(event.title),
-              subtitle: Text('${event.location} · ${formatDayMonth(event.startAt)}'),
+              subtitle:
+                  Text('${event.location} · ${formatDayMonth(event.startAt)}'),
               trailing: const Icon(Icons.emoji_events_outlined),
             ),
           );

@@ -18,22 +18,50 @@ class PlayGridMockData {
     name: 'Arjun Rao',
     email: 'arjun@acme.com',
     department: 'Engineering',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
+    avatarUrl:
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400',
     role: UserRole.member,
     skills: <SportPreference>[
-      const SportPreference(sportId: 'sport-badminton', skillLevel: SkillLevel.advanced),
-      const SportPreference(sportId: 'sport-cricket', skillLevel: SkillLevel.intermediate),
+      const SportPreference(
+          sportId: 'sport-badminton', skillLevel: SkillLevel.advanced),
+      const SportPreference(
+          sportId: 'sport-cricket', skillLevel: SkillLevel.intermediate),
     ],
     createdAt: DateTime(2026, 1, 3),
     updatedAt: DateTime(2026, 3, 9),
   );
 
   static const List<Sport> sports = <Sport>[
-    Sport(id: 'sport-badminton', name: 'Badminton', icon: 'shuttlecock', isActive: true, sortOrder: 1),
-    Sport(id: 'sport-cricket', name: 'Cricket', icon: 'sports_cricket', isActive: true, sortOrder: 2),
-    Sport(id: 'sport-football', name: 'Football', icon: 'sports_soccer', isActive: true, sortOrder: 3),
-    Sport(id: 'sport-basketball', name: 'Basketball', icon: 'sports_basketball', isActive: true, sortOrder: 4),
-    Sport(id: 'sport-running', name: 'Running', icon: 'directions_run', isActive: true, sortOrder: 5),
+    Sport(
+        id: 'sport-badminton',
+        name: 'Badminton',
+        icon: 'shuttlecock',
+        isActive: true,
+        sortOrder: 1),
+    Sport(
+        id: 'sport-cricket',
+        name: 'Cricket',
+        icon: 'sports_cricket',
+        isActive: true,
+        sortOrder: 2),
+    Sport(
+        id: 'sport-football',
+        name: 'Football',
+        icon: 'sports_soccer',
+        isActive: true,
+        sortOrder: 3),
+    Sport(
+        id: 'sport-basketball',
+        name: 'Basketball',
+        icon: 'sports_basketball',
+        isActive: true,
+        sortOrder: 4),
+    Sport(
+        id: 'sport-running',
+        name: 'Running',
+        icon: 'directions_run',
+        isActive: true,
+        sortOrder: 5),
   ];
 
   static const List<Venue> venues = <Venue>[
@@ -41,10 +69,12 @@ class PlayGridMockData {
       id: 'venue-alpha',
       name: 'Alpha Sports Arena',
       location: 'Indiranagar, Bengaluru',
-      description: 'Indoor courts, bright lighting, and flexible evening slots.',
+      description:
+          'Indoor courts, bright lighting, and flexible evening slots.',
       surfaceType: 'Synthetic',
       capacity: 40,
-      imageUrl: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=900',
+      imageUrl:
+          'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=900',
       isActive: true,
     ),
     Venue(
@@ -54,7 +84,8 @@ class PlayGridMockData {
       description: '5-a-side turf with floodlights and spectator stands.',
       surfaceType: 'Turf',
       capacity: 24,
-      imageUrl: 'https://images.unsplash.com/photo-1486286701208-1d58e9338013?w=900',
+      imageUrl:
+          'https://images.unsplash.com/photo-1486286701208-1d58e9338013?w=900',
       isActive: true,
     ),
     Venue(
@@ -64,7 +95,8 @@ class PlayGridMockData {
       description: 'Premium badminton courts and a lobby for meetups.',
       surfaceType: 'Wood',
       capacity: 32,
-      imageUrl: 'https://images.unsplash.com/photo-1526232761682-d26e031d67b8?w=900',
+      imageUrl:
+          'https://images.unsplash.com/photo-1526232761682-d26e031d67b8?w=900',
       isActive: true,
     ),
   ];
