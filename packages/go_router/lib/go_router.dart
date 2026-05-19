@@ -4,7 +4,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-typedef GoRouterRedirect = String? Function(BuildContext context, GoRouterState state);
+typedef GoRouterRedirect = String? Function(
+    BuildContext context, GoRouterState state);
 
 class GoRouterState {
   GoRouterState({
@@ -61,7 +62,8 @@ class _GoRouterScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(_GoRouterScope oldWidget) => router != oldWidget.router;
+  bool updateShouldNotify(_GoRouterScope oldWidget) =>
+      router != oldWidget.router;
 }
 
 class GoRouter extends ChangeNotifier {
@@ -120,7 +122,9 @@ class GoRouter extends ChangeNotifier {
   }) {
     final route = _routes.firstWhere((item) => item.name == name);
     final path = _buildPath(route.path, pathParameters);
-    final uri = Uri(path: path, queryParameters: queryParameters.isEmpty ? null : queryParameters);
+    final uri = Uri(
+        path: path,
+        queryParameters: queryParameters.isEmpty ? null : queryParameters);
     go(uri.toString());
   }
 
@@ -146,7 +150,8 @@ class GoRouter extends ChangeNotifier {
       if (resolved == null) {
         break;
       }
-      final context = _delegate.navigatorKey.currentContext ?? _delegate.currentContext;
+      final context =
+          _delegate.navigatorKey.currentContext ?? _delegate.currentContext;
       if (context == null) {
         break;
       }
@@ -164,7 +169,8 @@ class GoRouter extends ChangeNotifier {
     }
   }
 
-  static List<GoRoute> _flattenRoutes(List<GoRoute> routes, [String parent = '']) {
+  static List<GoRoute> _flattenRoutes(List<GoRoute> routes,
+      [String parent = '']) {
     final flattened = <GoRoute>[];
     for (final route in routes) {
       final fullPath = _joinPaths(parent, route.path);
@@ -200,7 +206,8 @@ class GoRouter extends ChangeNotifier {
   }
 
   static _ResolvedRoute? _matchRoute(GoRoute route, Uri uri) {
-    final patternSegments = route.path.split('/').where((segment) => segment.isNotEmpty).toList();
+    final patternSegments =
+        route.path.split('/').where((segment) => segment.isNotEmpty).toList();
     final uriSegments = uri.pathSegments;
     if (patternSegments.length != uriSegments.length) {
       return null;
@@ -280,7 +287,8 @@ class _GoRouteInformationParser extends RouteInformationParser<String> {
   final GoRouter router;
 
   @override
-  Future<String> parseRouteInformation(RouteInformation routeInformation) async {
+  Future<String> parseRouteInformation(
+      RouteInformation routeInformation) async {
     return routeInformation.uri.toString();
   }
 

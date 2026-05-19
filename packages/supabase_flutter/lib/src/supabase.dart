@@ -148,13 +148,15 @@ class TableQuery {
     final rows = _tables[table] ?? const [];
     return rows
         .where(
-          (row) => _filters.entries.every((filter) => row[filter.key] == filter.value),
+          (row) => _filters.entries
+              .every((filter) => row[filter.key] == filter.value),
         )
         .map((row) => Map<String, dynamic>.from(row))
         .toList(growable: false);
   }
 
-  Future<List<Map<String, dynamic>>> insert(List<Map<String, dynamic>> rows) async {
+  Future<List<Map<String, dynamic>>> insert(
+      List<Map<String, dynamic>> rows) async {
     final tableRows = _tables[table] ?? <Map<String, dynamic>>[];
     tableRows.addAll(rows.map((row) => Map<String, dynamic>.from(row)));
     _tables[table] = tableRows;
@@ -164,7 +166,8 @@ class TableQuery {
   Future<List<Map<String, dynamic>>> update(Map<String, dynamic> values) async {
     final tableRows = _tables[table] ?? <Map<String, dynamic>>[];
     for (var index = 0; index < tableRows.length; index++) {
-      if (_filters.entries.every((filter) => tableRows[index][filter.key] == filter.value)) {
+      if (_filters.entries
+          .every((filter) => tableRows[index][filter.key] == filter.value)) {
         tableRows[index] = {
           ...tableRows[index],
           ...values,
@@ -179,11 +182,11 @@ class TableQuery {
     final tableRows = _tables[table] ?? <Map<String, dynamic>>[];
     final remaining = tableRows
         .where(
-          (row) => !_filters.entries.every((filter) => row[filter.key] == filter.value),
+          (row) => !_filters.entries
+              .every((filter) => row[filter.key] == filter.value),
         )
         .toList(growable: false);
     _tables[table] = remaining;
     return remaining;
   }
 }
-

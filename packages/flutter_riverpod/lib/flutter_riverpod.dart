@@ -97,7 +97,8 @@ class ProviderScope extends StatefulWidget {
   final Map<ProviderBase<Object?>, Object?>? overrides;
 
   static ProviderContainer of(BuildContext context) {
-    final inherited = context.dependOnInheritedWidgetOfExactType<_ProviderScopeInherited>();
+    final inherited =
+        context.dependOnInheritedWidgetOfExactType<_ProviderScopeInherited>();
     assert(inherited != null, 'ProviderScope not found in widget tree.');
     return inherited!.notifier!;
   }
@@ -143,7 +144,8 @@ abstract class ConsumerStatefulWidget extends StatefulWidget {
   ConsumerState createState();
 }
 
-abstract class ConsumerState<T extends ConsumerStatefulWidget> extends State<T> {
+abstract class ConsumerState<T extends ConsumerStatefulWidget>
+    extends State<T> {
   Widget buildWithRef(BuildContext context, WidgetRef ref);
 
   @override
@@ -155,7 +157,8 @@ abstract class ConsumerState<T extends ConsumerStatefulWidget> extends State<T> 
 class Consumer extends StatelessWidget {
   const Consumer({super.key, required this.builder});
 
-  final Widget Function(BuildContext context, WidgetRef ref, Widget? child) builder;
+  final Widget Function(BuildContext context, WidgetRef ref, Widget? child)
+      builder;
 
   @override
   Widget build(BuildContext context) {
