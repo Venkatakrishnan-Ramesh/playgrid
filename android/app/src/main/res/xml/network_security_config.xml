@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Production network security policy for PlayGrid Club.
+
+    Cleartext traffic is disabled. All app traffic must use HTTPS,
+    including the Supabase REST/Realtime endpoints and any FCM-related
+    endpoints. Localhost is allowed only on debug builds via the
+    matching debug resource overlay if one is added later.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+</network-security-config>

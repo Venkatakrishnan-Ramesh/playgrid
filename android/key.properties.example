@@ -1,0 +1,15 @@
+# Template for android/key.properties (gitignored — do NOT commit the real file).
+#
+# Generate an upload keystore once per app:
+#
+#   keytool -genkey -v \
+#       -keystore android/app/upload-keystore.jks \
+#       -keyalg RSA -keysize 2048 -validity 10000 \
+#       -alias upload
+#
+# Then copy this file to android/key.properties and fill in real values.
+
+storePassword=changeme
+keyPassword=changeme
+keyAlias=upload
+storeFile=upload-keystore.jks
