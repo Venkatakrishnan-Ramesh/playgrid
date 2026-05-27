@@ -35,6 +35,7 @@ class SupabasePlayGridRepository implements PlayGridRepository {
         events: const <EventItem>[],
         notifications: const <NotificationItem>[],
         venueSlots: const <VenueSlot>[],
+        members: const <AppUserProfile>[],
         loading: false,
         message: 'Ready to sign in.',
       );
@@ -85,6 +86,7 @@ class SupabasePlayGridRepository implements PlayGridRepository {
           (results[9] as List<Map<String, dynamic>>)
               .map(SupabaseMappers.notification)
               .toList(growable: false);
+      final List<AppUserProfile> members = await _loadMembers();
 
       return PlayGridState(
         session: session.copyWith(
@@ -106,6 +108,7 @@ class SupabasePlayGridRepository implements PlayGridRepository {
         // Slot availability is derived from venues + bookings on the client
         // for now; there is no `venue_slots` table in the schema.
         venueSlots: const <VenueSlot>[],
+        members: members,
         loading: false,
         message:
             profile == null ? 'Complete your profile to continue.' : 'Loaded.',
@@ -137,6 +140,17 @@ class SupabasePlayGridRepository implements PlayGridRepository {
         ? await base
         : await base.order(orderBy, ascending: !descending);
     return List<Map<String, dynamic>>.from(data);
+  }
+
+  /// Loads the member directory for roster display. Tolerates RLS restrictions
+  /// by returning an empty list instead of failing the whole bootstrap.
+  Future<List<AppUserProfile>> _loadMembers() async {
+    try {
+      final rows = await _loadList('profiles', orderBy: 'name');
+      return rows.map(SupabaseMappers.member).toList(growable: false);
+    } on sb.PostgrestException {
+      return const <AppUserProfile>[];
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -262,6 +276,23 @@ class SupabasePlayGridRepository implements PlayGridRepository {
     }
   }
 
+  @override
+  Future<PlayGridState> restoreBooking({
+    required PlayGridSession session,
+    required String bookingId,
+  }) async {
+    try {
+      await _client
+          .from('bookings')
+          .update(<String, dynamic>{'status': 'confirmed'})
+          .eq('id', bookingId)
+          .eq('user_id', session.userId);
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
   String _bookingErrorMessage(sb.PostgrestException error) {
     return switch (error.message) {
       'auth_required' => 'Sign in to create a booking.',
@@ -309,15 +340,98 @@ class SupabasePlayGridRepository implements PlayGridRepository {
   }
 
   @override
+  Future<PlayGridState> inviteToGame({
+    required PlayGridSession session,
+    required String gameId,
+    required List<String> userIds,
+  }) async {
+    if (userIds.isEmpty) {
+      return bootstrap(session: session);
+    }
+    try {
+      final List<Map<String, dynamic>> rows = userIds
+          .map((String id) => <String, dynamic>{
+                'game_id': gameId,
+                'user_id': id,
+                'status': 'invited',
+              })
+          .toList();
+      await _client.from('game_players').upsert(rows);
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> respondGameInvite({
+    required PlayGridSession session,
+    required String gameId,
+    required bool accept,
+  }) async {
+    try {
+      if (!accept) {
+        await _client
+            .from('game_players')
+            .update(<String, dynamic>{'status': 'declined'})
+            .eq('game_id', gameId)
+            .eq('user_id', session.userId);
+        return bootstrap(session: session);
+      }
+      final Map<String, dynamic>? game = await _client
+          .from('games')
+          .select('max_players, waitlist_enabled')
+          .eq('id', gameId)
+          .maybeSingle();
+      final int maxPlayers = (game?['max_players'] as num?)?.toInt() ?? 0;
+      final bool waitlistEnabled = game?['waitlist_enabled'] as bool? ?? true;
+      final List<dynamic> joined = await _client
+          .from('game_players')
+          .select('user_id')
+          .eq('game_id', gameId)
+          .eq('status', 'joined');
+      final bool isFull = maxPlayers > 0 && joined.length >= maxPlayers;
+      if (isFull && !waitlistEnabled) {
+        throw const AppFailure('This game is full.');
+      }
+      await _client
+          .from('game_players')
+          .update(<String, dynamic>{'status': isFull ? 'waitlisted' : 'joined'})
+          .eq('game_id', gameId)
+          .eq('user_id', session.userId);
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
   Future<PlayGridState> joinGame({
     required PlayGridSession session,
     required String gameId,
   }) async {
     try {
+      // Decide joined vs. waitlisted from current capacity.
+      final Map<String, dynamic>? game = await _client
+          .from('games')
+          .select('max_players, waitlist_enabled')
+          .eq('id', gameId)
+          .maybeSingle();
+      final int maxPlayers = (game?['max_players'] as num?)?.toInt() ?? 0;
+      final bool waitlistEnabled = game?['waitlist_enabled'] as bool? ?? true;
+      final List<dynamic> joined = await _client
+          .from('game_players')
+          .select('user_id')
+          .eq('game_id', gameId)
+          .eq('status', 'joined');
+      final bool isFull = maxPlayers > 0 && joined.length >= maxPlayers;
+      if (isFull && !waitlistEnabled) {
+        throw const AppFailure('This game is full.');
+      }
       await _client.from('game_players').upsert(<String, dynamic>{
         'game_id': gameId,
         'user_id': session.userId,
-        'status': 'joined',
+        'status': isFull ? 'waitlisted' : 'joined',
       });
       return bootstrap(session: session);
     } on sb.PostgrestException catch (error) {
@@ -345,6 +459,43 @@ class SupabasePlayGridRepository implements PlayGridRepository {
   // ---------------------------------------------------------------------------
   // Groups
   // ---------------------------------------------------------------------------
+
+  @override
+  Future<PlayGridState> createGroup({
+    required PlayGridSession session,
+    required String name,
+    required String description,
+    required String department,
+    required bool isPublic,
+  }) async {
+    final String trimmedName = name.trim();
+    if (trimmedName.isEmpty) {
+      throw const AppFailure('Group name is required.');
+    }
+    try {
+      final Map<String, dynamic> inserted = await _client
+          .from('groups')
+          .insert(<String, dynamic>{
+            'name': trimmedName,
+            'description': description.trim(),
+            'department_scope': department.trim(),
+            'visibility': isPublic ? 'public' : 'private',
+            'created_by': session.userId,
+          })
+          .select('id')
+          .single();
+      // The creator is automatically the group owner.
+      await _client.from('group_members').upsert(<String, dynamic>{
+        'group_id': inserted['id'],
+        'user_id': session.userId,
+        'status': 'member',
+        'member_role': 'owner',
+      });
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
 
   @override
   Future<PlayGridState> joinGroup({
@@ -385,6 +536,56 @@ class SupabasePlayGridRepository implements PlayGridRepository {
   // Notifications
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Shared bookings & friends
+  //
+  // The current schema (001_initial_schema.sql) has no `booking_participants`
+  // or `friendships` tables, so these fail with a clear message until a
+  // migration adds them. They work fully against the local/mock backend.
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<PlayGridState> addBookingParticipants({
+    required PlayGridSession session,
+    required String bookingId,
+    required List<String> userIds,
+  }) async {
+    throw const AppFailure('Shared bookings require a backend update.');
+  }
+
+  @override
+  Future<PlayGridState> leaveSharedBooking({
+    required PlayGridSession session,
+    required String bookingId,
+  }) async {
+    throw const AppFailure('Shared bookings require a backend update.');
+  }
+
+  @override
+  Future<PlayGridState> sendFriendRequest({
+    required PlayGridSession session,
+    required String addresseeId,
+  }) async {
+    throw const AppFailure('Friends require a backend update.');
+  }
+
+  @override
+  Future<PlayGridState> respondFriendRequest({
+    required PlayGridSession session,
+    required String friendshipId,
+    required bool accept,
+  }) async {
+    throw const AppFailure('Friends require a backend update.');
+  }
+
+  @override
+  Future<PlayGridState> removeFriend({
+    required PlayGridSession session,
+    required String friendshipId,
+  }) async {
+    throw const AppFailure('Friends require a backend update.');
+  }
+
   @override
   Future<PlayGridState> markNotificationRead({
     required PlayGridSession session,
@@ -398,6 +599,24 @@ class SupabasePlayGridRepository implements PlayGridRepository {
           })
           .eq('id', notificationId)
           .eq('user_id', session.userId);
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> markAllNotificationsRead({
+    required PlayGridSession session,
+  }) async {
+    try {
+      await _client
+          .from('notifications')
+          .update(<String, dynamic>{
+            'read_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('user_id', session.userId)
+          .isFilter('read_at', null);
       return bootstrap(session: session);
     } on sb.PostgrestException catch (error) {
       throw AppFailure(error.message);

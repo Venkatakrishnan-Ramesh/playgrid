@@ -33,6 +33,11 @@ abstract class PlayGridRepository {
     required String bookingId,
   });
 
+  Future<PlayGridState> restoreBooking({
+    required PlayGridSession session,
+    required String bookingId,
+  });
+
   Future<PlayGridState> createGame({
     required PlayGridSession session,
     required String title,
@@ -42,6 +47,18 @@ abstract class PlayGridRepository {
     required DateTime startsAt,
     required DateTime endsAt,
     required int maxPlayers,
+  });
+
+  Future<PlayGridState> inviteToGame({
+    required PlayGridSession session,
+    required String gameId,
+    required List<String> userIds,
+  });
+
+  Future<PlayGridState> respondGameInvite({
+    required PlayGridSession session,
+    required String gameId,
+    required bool accept,
   });
 
   Future<PlayGridState> joinGame({
@@ -54,6 +71,14 @@ abstract class PlayGridRepository {
     required String gameId,
   });
 
+  Future<PlayGridState> createGroup({
+    required PlayGridSession session,
+    required String name,
+    required String description,
+    required String department,
+    required bool isPublic,
+  });
+
   Future<PlayGridState> joinGroup({
     required PlayGridSession session,
     required String groupId,
@@ -64,9 +89,44 @@ abstract class PlayGridRepository {
     required String groupId,
   });
 
+  // --- Shared bookings ------------------------------------------------------
+
+  Future<PlayGridState> addBookingParticipants({
+    required PlayGridSession session,
+    required String bookingId,
+    required List<String> userIds,
+  });
+
+  Future<PlayGridState> leaveSharedBooking({
+    required PlayGridSession session,
+    required String bookingId,
+  });
+
+  // --- Friends --------------------------------------------------------------
+
+  Future<PlayGridState> sendFriendRequest({
+    required PlayGridSession session,
+    required String addresseeId,
+  });
+
+  Future<PlayGridState> respondFriendRequest({
+    required PlayGridSession session,
+    required String friendshipId,
+    required bool accept,
+  });
+
+  Future<PlayGridState> removeFriend({
+    required PlayGridSession session,
+    required String friendshipId,
+  });
+
   Future<PlayGridState> markNotificationRead({
     required PlayGridSession session,
     required String notificationId,
+  });
+
+  Future<PlayGridState> markAllNotificationsRead({
+    required PlayGridSession session,
   });
 
   Future<PlayGridState> requestAccountDeletion({

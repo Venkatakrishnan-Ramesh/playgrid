@@ -55,7 +55,9 @@ class SupabaseMappers {
       };
 
   static PlayerStatus playerStatus(String? raw) => switch (raw) {
+        'invited' => PlayerStatus.invited,
         'waitlisted' => PlayerStatus.waitlisted,
+        'declined' => PlayerStatus.declined,
         'left' => PlayerStatus.left,
         _ => PlayerStatus.joined,
       };
@@ -98,6 +100,20 @@ class SupabaseMappers {
       updatedAt: _timestamp(row['updated_at']),
     );
   }
+
+  /// Lightweight profile used for the roster member directory (no sport
+  /// preferences joined).
+  static AppUserProfile member(Map<String, dynamic> row) => AppUserProfile(
+        id: row['id'] as String? ?? '',
+        name: row['name'] as String? ?? '',
+        email: row['email'] as String? ?? '',
+        department: row['department'] as String? ?? '',
+        avatarUrl: row['avatar_url'] as String? ?? '',
+        role: role(row['role'] as String?),
+        skills: const <SportPreference>[],
+        createdAt: _timestamp(row['created_at']),
+        updatedAt: _timestamp(row['updated_at']),
+      );
 
   static Sport sport(Map<String, dynamic> row) => Sport(
         id: row['id'] as String? ?? '',

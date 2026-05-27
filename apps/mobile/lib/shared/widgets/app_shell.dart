@@ -1,8 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/router/route_paths.dart';
+import '../../features/auth/domain/playgrid_controller.dart';
+
+/// A thin top progress bar that appears whenever the controller is performing
+/// an async operation. Reserves a constant height to avoid layout shift.
+class GlobalLoadingBar extends ConsumerWidget implements PreferredSizeWidget {
+  const GlobalLoadingBar({super.key});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(3);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bool loading = ref.watch(playGridControllerProvider).state.loading;
+    return SizedBox(
+      height: 3,
+      child: loading ? const LinearProgressIndicator(minHeight: 3) : null,
+    );
+  }
+}
 
 class AppShell extends StatelessWidget {
   const AppShell({
@@ -21,7 +41,11 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title), actions: actions),
+      appBar: AppBar(
+        title: Text(title),
+        actions: actions,
+        bottom: const GlobalLoadingBar(),
+      ),
       floatingActionButton: fab,
       body: SafeArea(
         child: Padding(
@@ -124,54 +148,68 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title), actions: actions),
-      floatingActionButton: fab,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: body,
+    final bool isHome = index == 0;
+    return PopScope(
+      canPop: isHome,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) {
+          return;
+        }
+        context.go(RoutePaths.home);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(title),
+          actions: actions,
+          bottom: const GlobalLoadingBar(),
         ),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: index.clamp(0, 5).toInt(),
-        onDestinationSelected: (selected) {
-          const routes = <String>[
-            RoutePaths.home,
-            RoutePaths.venues,
-            RoutePaths.games,
-            RoutePaths.groups,
-            RoutePaths.events,
-            RoutePaths.settings,
-          ];
-          context.go(routes[selected]);
-        },
-        destinations: const <NavigationDestination>[
-          NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home),
-              label: 'Home'),
-          NavigationDestination(
-              icon: Icon(Icons.stadium_outlined),
-              selectedIcon: Icon(Icons.stadium),
-              label: 'Venues'),
-          NavigationDestination(
-              icon: Icon(Icons.emoji_events_outlined),
-              selectedIcon: Icon(Icons.emoji_events),
-              label: 'Games'),
-          NavigationDestination(
-              icon: Icon(Icons.groups_outlined),
-              selectedIcon: Icon(Icons.groups),
-              label: 'Groups'),
-          NavigationDestination(
-              icon: Icon(Icons.event_outlined),
-              selectedIcon: Icon(Icons.event),
-              label: 'Events'),
-          NavigationDestination(
-              icon: Icon(Icons.settings_outlined),
-              selectedIcon: Icon(Icons.settings),
-              label: 'Settings'),
-        ],
+        floatingActionButton: fab,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: body,
+          ),
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: index.clamp(0, 5).toInt(),
+          onDestinationSelected: (selected) {
+            const routes = <String>[
+              RoutePaths.home,
+              RoutePaths.venues,
+              RoutePaths.games,
+              RoutePaths.groups,
+              RoutePaths.events,
+              RoutePaths.settings,
+            ];
+            context.go(routes[selected]);
+          },
+          destinations: const <NavigationDestination>[
+            NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home'),
+            NavigationDestination(
+                icon: Icon(Icons.stadium_outlined),
+                selectedIcon: Icon(Icons.stadium),
+                label: 'Venues'),
+            NavigationDestination(
+                icon: Icon(Icons.emoji_events_outlined),
+                selectedIcon: Icon(Icons.emoji_events),
+                label: 'Games'),
+            NavigationDestination(
+                icon: Icon(Icons.groups_outlined),
+                selectedIcon: Icon(Icons.groups),
+                label: 'Groups'),
+            NavigationDestination(
+                icon: Icon(Icons.event_outlined),
+                selectedIcon: Icon(Icons.event),
+                label: 'Events'),
+            NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: 'Settings'),
+          ],
+        ),
       ),
     );
   }

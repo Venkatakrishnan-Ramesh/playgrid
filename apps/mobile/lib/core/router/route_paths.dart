@@ -6,6 +6,7 @@ class RoutePaths {
   static const String profileSetup = '/setup/profile';
   static const String home = '/home';
   static const String profile = '/profile';
+  static const String friends = '/friends';
   static const String sports = '/sports';
   static const String venues = '/venues';
   static const String venueDetail = '/venues/:venueId';
@@ -15,6 +16,7 @@ class RoutePaths {
   static const String gameDetail = '/games/:gameId';
   static const String gameCreate = '/games/create';
   static const String groups = '/groups';
+  static const String groupCreate = '/groups/create';
   static const String groupDetail = '/groups/:groupId';
   static const String events = '/events';
   static const String notifications = '/notifications';

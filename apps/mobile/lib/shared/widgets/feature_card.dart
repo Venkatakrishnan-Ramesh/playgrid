@@ -51,10 +51,10 @@ class FeatureCard extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
                     Text(subtitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: Colors.black54)),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant)),
                   ],
                 ),
               ),

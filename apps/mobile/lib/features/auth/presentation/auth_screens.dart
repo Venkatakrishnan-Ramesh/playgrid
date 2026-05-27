@@ -99,12 +99,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: const Text('Login'),
                           ),
                           TextButton(
-                            onPressed: () => context.go(RoutePaths.signup),
+                            onPressed: () => context.push(RoutePaths.signup),
                             child: const Text('Create an account'),
                           ),
                           TextButton(
                             onPressed: () =>
-                                context.go(RoutePaths.forgotPassword),
+                                context.push(RoutePaths.forgotPassword),
                             child: const Text('Forgot password?'),
                           ),
                         ],

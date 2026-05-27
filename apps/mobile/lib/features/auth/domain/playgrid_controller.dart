@@ -8,8 +8,13 @@ import '../../../shared/models/playgrid_models.dart';
 import '../data/auth_service.dart';
 import 'playgrid_repository.dart';
 
-final Provider<PlayGridController> playGridControllerProvider =
-    Provider<PlayGridController>((Ref ref) {
+/// Exposes the [PlayGridController] as a [ChangeNotifierProvider] so that every
+/// `ref.watch` rebuilds when the controller calls `notifyListeners()`. A plain
+/// `Provider` would hand out the same controller instance and never rebuild on
+/// state changes, which is why created games/bookings only appeared after
+/// navigating away and back.
+final ChangeNotifierProvider<PlayGridController> playGridControllerProvider =
+    ChangeNotifierProvider<PlayGridController>((Ref ref) {
   AppDependencies.initialize(AppConfig.fromEnvironment());
   return PlayGridController(
     authService: AppDependencies.authService,
@@ -55,6 +60,14 @@ class PlayGridController extends ChangeNotifier {
         _state.copyWith(loading: true, message: 'Preparing PlayGrid Club...');
     final PlayGridSession session = await _authService.currentSession();
     final PlayGridState data = await _repository.bootstrap(session: session);
+    _setState = data.copyWith(loading: false);
+  }
+
+  /// Re-fetches everything for the current session (pull-to-refresh).
+  Future<void> refresh() async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState data =
+        await _repository.bootstrap(session: _state.session);
     _setState = data.copyWith(loading: false);
   }
 
@@ -171,6 +184,15 @@ class PlayGridController extends ChangeNotifier {
     _setState = updated.copyWith(loading: false);
   }
 
+  Future<void> restoreBooking(String bookingId) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.restoreBooking(
+      session: _state.session,
+      bookingId: bookingId,
+    );
+    _setState = updated.copyWith(loading: false);
+  }
+
   Future<void> createGame({
     required String title,
     required String description,
@@ -193,14 +215,84 @@ class PlayGridController extends ChangeNotifier {
     _setState = updated;
   }
 
+  Future<void> inviteToGame(String gameId, List<String> userIds) async {
+    _setState = await _repository.inviteToGame(
+      session: _state.session,
+      gameId: gameId,
+      userIds: userIds,
+    );
+  }
+
+  Future<void> respondGameInvite(String gameId, {required bool accept}) async {
+    _setState = await _repository.respondGameInvite(
+      session: _state.session,
+      gameId: gameId,
+      accept: accept,
+    );
+  }
+
   Future<void> joinGame(String gameId) async {
     _setState =
         await _repository.joinGame(session: _state.session, gameId: gameId);
   }
 
+  Future<void> addBookingParticipants(
+      String bookingId, List<String> userIds) async {
+    _setState = await _repository.addBookingParticipants(
+      session: _state.session,
+      bookingId: bookingId,
+      userIds: userIds,
+    );
+  }
+
+  Future<void> leaveSharedBooking(String bookingId) async {
+    _setState = await _repository.leaveSharedBooking(
+      session: _state.session,
+      bookingId: bookingId,
+    );
+  }
+
+  Future<void> sendFriendRequest(String addresseeId) async {
+    _setState = await _repository.sendFriendRequest(
+      session: _state.session,
+      addresseeId: addresseeId,
+    );
+  }
+
+  Future<void> respondFriendRequest(String friendshipId,
+      {required bool accept}) async {
+    _setState = await _repository.respondFriendRequest(
+      session: _state.session,
+      friendshipId: friendshipId,
+      accept: accept,
+    );
+  }
+
+  Future<void> removeFriend(String friendshipId) async {
+    _setState = await _repository.removeFriend(
+      session: _state.session,
+      friendshipId: friendshipId,
+    );
+  }
+
   Future<void> leaveGame(String gameId) async {
     _setState =
         await _repository.leaveGame(session: _state.session, gameId: gameId);
+  }
+
+  Future<void> createGroup({
+    required String name,
+    required String description,
+    required String department,
+    required bool isPublic,
+  }) async {
+    _setState = await _repository.createGroup(
+      session: _state.session,
+      name: name,
+      description: description,
+      department: department,
+      isPublic: isPublic,
+    );
   }
 
   Future<void> joinGroup(String groupId) async {
@@ -217,6 +309,12 @@ class PlayGridController extends ChangeNotifier {
     _setState = await _repository.markNotificationRead(
       session: _state.session,
       notificationId: notificationId,
+    );
+  }
+
+  Future<void> markAllNotificationsRead() async {
+    _setState = await _repository.markAllNotificationsRead(
+      session: _state.session,
     );
   }
 

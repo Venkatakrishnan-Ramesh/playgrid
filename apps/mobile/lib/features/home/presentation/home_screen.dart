@@ -20,108 +20,134 @@ class HomeScreen extends ConsumerWidget {
     final List<Booking> upcoming =
         state.upcomingBookingsFor(state.session.userId);
     final List<Game> openGames = state.openGames();
+    final int unread = state.unreadNotificationCount(state.session.userId);
+    final int friendRequests =
+        state.pendingFriendRequestCount(state.session.userId);
 
     return MainShell(
       title: 'PlayGrid Club',
       index: 0,
       actions: <Widget>[
         IconButton(
-          onPressed: () => context.go(RoutePaths.profile),
+          onPressed: () => context.push(RoutePaths.friends),
+          icon: friendRequests > 0
+              ? Badge.count(
+                  count: friendRequests,
+                  child: const Icon(Icons.people_outline),
+                )
+              : const Icon(Icons.people_outline),
+        ),
+        IconButton(
+          onPressed: () => context.push(RoutePaths.notifications),
+          icon: unread > 0
+              ? Badge.count(
+                  count: unread,
+                  child: const Icon(Icons.notifications_outlined),
+                )
+              : const Icon(Icons.notifications_outlined),
+        ),
+        IconButton(
+          onPressed: () => context.push(RoutePaths.profile),
           icon: const Icon(Icons.person_outline),
         ),
       ],
-      body: ListView(
-        children: <Widget>[
-          Text(
-            'Your sports coordination hub',
-            style: Theme.of(context)
-                .textTheme
-                .headlineSmall
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: <Widget>[
-              _HomeActionCard(
-                title: 'Book a Slot',
-                subtitle: 'Reserve courts and turf',
-                icon: Icons.calendar_month_outlined,
-                onTap: () => context.go(RoutePaths.venues),
-              ),
-              _HomeActionCard(
-                title: 'Join a Game',
-                subtitle: 'Open games and waitlists',
-                icon: Icons.emoji_events_outlined,
-                onTap: () => context.go(RoutePaths.games),
-              ),
-              _HomeActionCard(
-                title: 'My Bookings',
-                subtitle: 'Upcoming bookings',
-                icon: Icons.event_available_outlined,
-                onTap: () => context.go(RoutePaths.bookings),
-              ),
-              _HomeActionCard(
-                title: 'Groups',
-                subtitle: 'Department clubs',
-                icon: Icons.groups_outlined,
-                onTap: () => context.go(RoutePaths.groups),
-              ),
-              _HomeActionCard(
-                title: 'Tournaments',
-                subtitle: 'Club events',
-                icon: Icons.local_fire_department_outlined,
-                onTap: () => context.go(RoutePaths.events),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SectionHeader(
-            title: 'Upcoming booking',
-            subtitle: 'Your nearest confirmed or pending slot.',
-            action: TextButton(
-              onPressed: () => context.go(RoutePaths.bookings),
-              child: const Text('View all'),
+      body: RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: ListView(
+          children: <Widget>[
+            Text(
+              'Your sports coordination hub',
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
-          ),
-          const SizedBox(height: 12),
-          if (upcoming.isEmpty)
-            const _EmptyPreview(title: 'No upcoming bookings yet')
-          else
-            ...upcoming.take(1).map(
-                  (Booking booking) => _BookingPreview(
-                    booking: booking,
-                    venue: state.venues.firstWhere(
-                        (Venue venue) => venue.id == booking.venueId),
-                    sport: state.sports.firstWhere(
-                        (Sport sport) => sport.id == booking.sportId),
-                  ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: <Widget>[
+                _HomeActionCard(
+                  title: 'Book a Slot',
+                  subtitle: 'Reserve courts and turf',
+                  icon: Icons.calendar_month_outlined,
+                  onTap: () => context.push(RoutePaths.venues),
                 ),
-          const SizedBox(height: 24),
-          SectionHeader(
-            title: 'Open games',
-            subtitle: 'Games your team can join today.',
-            action: TextButton(
-              onPressed: () => context.go(RoutePaths.games),
-              child: const Text('See all'),
+                _HomeActionCard(
+                  title: 'Join a Game',
+                  subtitle: 'Open games and waitlists',
+                  icon: Icons.emoji_events_outlined,
+                  onTap: () => context.push(RoutePaths.games),
+                ),
+                _HomeActionCard(
+                  title: 'My Bookings',
+                  subtitle: 'Upcoming bookings',
+                  icon: Icons.event_available_outlined,
+                  onTap: () => context.push(RoutePaths.bookings),
+                ),
+                _HomeActionCard(
+                  title: 'Groups',
+                  subtitle: 'Department clubs',
+                  icon: Icons.groups_outlined,
+                  onTap: () => context.push(RoutePaths.groups),
+                ),
+                _HomeActionCard(
+                  title: 'Tournaments',
+                  subtitle: 'Club events',
+                  icon: Icons.local_fire_department_outlined,
+                  onTap: () => context.push(RoutePaths.events),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          if (openGames.isEmpty)
-            const _EmptyPreview(title: 'No open games currently')
-          else
-            ...openGames.take(2).map(
-                  (Game game) => _OpenGameCard(
-                    game: game,
-                    sport: state.sports
-                        .firstWhere((Sport sport) => sport.id == game.sportId),
-                    venue: state.venues
-                        .firstWhere((Venue venue) => venue.id == game.venueId),
-                    onTap: () => context.go('/games/${game.id}'),
+            const SizedBox(height: 24),
+            SectionHeader(
+              title: 'Upcoming booking',
+              subtitle: 'Your nearest confirmed or pending slot.',
+              action: TextButton(
+                onPressed: () => context.push(RoutePaths.bookings),
+                child: const Text('View all'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (upcoming.isEmpty)
+              const _EmptyPreview(title: 'No upcoming bookings yet')
+            else
+              ...upcoming.take(1).map(
+                    (Booking booking) => _BookingPreview(
+                      booking: booking,
+                      venue: state.venues.firstWhere(
+                          (Venue venue) => venue.id == booking.venueId),
+                      sport: state.sports.firstWhere(
+                          (Sport sport) => sport.id == booking.sportId),
+                    ),
                   ),
-                ),
-        ],
+            const SizedBox(height: 24),
+            SectionHeader(
+              title: 'Open games',
+              subtitle: 'Games your team can join today.',
+              action: TextButton(
+                onPressed: () => context.push(RoutePaths.games),
+                child: const Text('See all'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (openGames.isEmpty)
+              const _EmptyPreview(title: 'No open games currently')
+            else
+              ...openGames.take(2).map(
+                    (Game game) => _OpenGameCard(
+                      game: game,
+                      sport: state.sports.firstWhere(
+                          (Sport sport) => sport.id == game.sportId),
+                      venue: state.venues.firstWhere(
+                          (Venue venue) => venue.id == game.venueId),
+                      joined:
+                          state.isPlayerActive(game.id, state.session.userId),
+                      onTap: () => context.push('/games/${game.id}'),
+                    ),
+                  ),
+          ],
+        ),
       ),
     );
   }
@@ -183,12 +209,14 @@ class _OpenGameCard extends StatelessWidget {
     required this.game,
     required this.sport,
     required this.venue,
+    required this.joined,
     required this.onTap,
   });
 
   final Game game;
   final Sport sport;
   final Venue venue;
+  final bool joined;
   final VoidCallback onTap;
 
   @override
@@ -199,7 +227,13 @@ class _OpenGameCard extends StatelessWidget {
         title: Text(game.title),
         subtitle: Text(
             '${sport.name} · ${venue.name} · ${formatTimeRange(game.startsAt, game.endsAt)}'),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: joined
+            ? const Chip(
+                avatar: Icon(Icons.check, size: 16, color: Colors.green),
+                label: Text('Joined'),
+                visualDensity: VisualDensity.compact,
+              )
+            : const Icon(Icons.chevron_right),
       ),
     );
   }

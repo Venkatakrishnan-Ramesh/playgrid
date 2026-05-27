@@ -66,14 +66,14 @@ class ProfileScreen extends ConsumerWidget {
                         : '${sport.name} · ${skill.skillLevel.label}';
                   }).join(' • '),
             icon: Icons.sports_tennis,
-            onTap: () => context.go(RoutePaths.sports),
+            onTap: () => context.push(RoutePaths.sports),
           ),
           const SizedBox(height: 16),
           FeatureCard(
             title: 'Complete profile setup',
             subtitle: 'Update sports, department, and role',
             icon: Icons.edit_outlined,
-            onTap: () => context.go(RoutePaths.profileSetup),
+            onTap: () => context.push(RoutePaths.profileSetup),
           ),
         ],
       ),

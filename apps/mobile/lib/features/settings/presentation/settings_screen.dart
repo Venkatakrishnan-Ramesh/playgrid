@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/route_paths.dart';
+import '../../../core/theme/theme_mode_provider.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/main_shell.dart';
 import '../../auth/domain/playgrid_controller.dart';
@@ -13,21 +14,63 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final PlayGridController controller = ref.watch(playGridControllerProvider);
+    final ThemeMode themeMode = ref.watch(themeModeProvider);
 
     return MainShell(
       title: 'Settings',
       index: 5,
       body: ListView(
         children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text('Appearance',
+                style: Theme.of(context).textTheme.titleMedium),
+          ),
+          SegmentedButton<ThemeMode>(
+            segments: const <ButtonSegment<ThemeMode>>[
+              ButtonSegment<ThemeMode>(
+                value: ThemeMode.system,
+                label: Text('System'),
+                icon: Icon(Icons.brightness_auto_outlined),
+              ),
+              ButtonSegment<ThemeMode>(
+                value: ThemeMode.light,
+                label: Text('Light'),
+                icon: Icon(Icons.light_mode_outlined),
+              ),
+              ButtonSegment<ThemeMode>(
+                value: ThemeMode.dark,
+                label: Text('Dark'),
+                icon: Icon(Icons.dark_mode_outlined),
+              ),
+            ],
+            selected: <ThemeMode>{themeMode},
+            onSelectionChanged: (Set<ThemeMode> selection) =>
+                ref.read(themeModeProvider.notifier).state = selection.first,
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            leading: const Icon(Icons.people_outline),
+            title: const Text('Friends'),
+            subtitle: const Text('Manage connections and requests'),
+            onTap: () => context.push(RoutePaths.friends),
+          ),
+          ListTile(
+            leading: const Icon(Icons.notifications_outlined),
+            title: const Text('Notifications'),
+            subtitle: const Text('View your alerts'),
+            onTap: () => context.push(RoutePaths.notifications),
+          ),
+          const Divider(),
           ListTile(
             title: const Text('Privacy policy'),
             subtitle: const Text('Placeholder link for the app store listing'),
-            onTap: () => context.go(RoutePaths.privacyPolicy),
+            onTap: () => context.push(RoutePaths.privacyPolicy),
           ),
           ListTile(
             title: const Text('Account deletion request'),
             subtitle: const Text('Request data removal'),
-            onTap: () => context.go(RoutePaths.accountDeletion),
+            onTap: () => context.push(RoutePaths.accountDeletion),
           ),
           ListTile(
             title: const Text('Logout'),

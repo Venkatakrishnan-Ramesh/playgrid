@@ -1,3 +1,34 @@
+/// Safe id lookups that return a placeholder instead of throwing when a
+/// referenced sport/venue is missing (e.g. after a refresh removes it).
+extension SportListLookup on List<Sport> {
+  Sport byId(String id) => firstWhere(
+        (Sport sport) => sport.id == id,
+        orElse: () => const Sport(
+          id: '',
+          name: 'Unknown sport',
+          icon: '',
+          isActive: false,
+          sortOrder: 0,
+        ),
+      );
+}
+
+extension VenueListLookup on List<Venue> {
+  Venue byId(String id) => firstWhere(
+        (Venue venue) => venue.id == id,
+        orElse: () => const Venue(
+          id: '',
+          name: 'Unknown venue',
+          location: '',
+          description: '',
+          surfaceType: '',
+          capacity: 0,
+          imageUrl: '',
+          isActive: false,
+        ),
+      );
+}
+
 enum UserRole { member, admin, superAdmin }
 
 extension UserRoleLabel on UserRole {
@@ -41,9 +72,48 @@ extension GameStatusLabel on GameStatus {
       };
 }
 
-enum PlayerStatus { joined, waitlisted, left }
+enum PlayerStatus { invited, joined, waitlisted, declined, left }
 
 enum NotificationType { booking, game, group, event, system }
+
+enum FriendshipStatus { pending, accepted, declined }
+
+enum ParticipantStatus { invited, going, declined }
+
+class Friendship {
+  const Friendship({
+    required this.id,
+    required this.requesterId,
+    required this.addresseeId,
+    required this.status,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String requesterId;
+  final String addresseeId;
+  final FriendshipStatus status;
+  final DateTime createdAt;
+
+  /// The id of the other party relative to [userId].
+  String otherUserId(String userId) =>
+      requesterId == userId ? addresseeId : requesterId;
+
+  bool involves(String userId) =>
+      requesterId == userId || addresseeId == userId;
+}
+
+class BookingParticipant {
+  const BookingParticipant({
+    required this.bookingId,
+    required this.userId,
+    required this.status,
+  });
+
+  final String bookingId;
+  final String userId;
+  final ParticipantStatus status;
+}
 
 class SportPreference {
   const SportPreference({
@@ -424,6 +494,9 @@ class PlayGridState {
     required this.events,
     required this.notifications,
     required this.venueSlots,
+    this.members = const <AppUserProfile>[],
+    this.friendships = const <Friendship>[],
+    this.bookingParticipants = const <BookingParticipant>[],
     required this.loading,
     required this.message,
   });
@@ -440,6 +513,11 @@ class PlayGridState {
   final List<EventItem> events;
   final List<NotificationItem> notifications;
   final List<VenueSlot> venueSlots;
+
+  /// Directory of known members, used to resolve display names for rosters.
+  final List<AppUserProfile> members;
+  final List<Friendship> friendships;
+  final List<BookingParticipant> bookingParticipants;
   final bool loading;
   final String message;
 
@@ -456,6 +534,9 @@ class PlayGridState {
         events = const <EventItem>[],
         notifications = const <NotificationItem>[],
         venueSlots = const <VenueSlot>[],
+        members = const <AppUserProfile>[],
+        friendships = const <Friendship>[],
+        bookingParticipants = const <BookingParticipant>[],
         loading = false,
         message = '';
 
@@ -472,6 +553,9 @@ class PlayGridState {
     List<EventItem>? events,
     List<NotificationItem>? notifications,
     List<VenueSlot>? venueSlots,
+    List<AppUserProfile>? members,
+    List<Friendship>? friendships,
+    List<BookingParticipant>? bookingParticipants,
     bool? loading,
     String? message,
   }) {
@@ -488,6 +572,9 @@ class PlayGridState {
       events: events ?? this.events,
       notifications: notifications ?? this.notifications,
       venueSlots: venueSlots ?? this.venueSlots,
+      members: members ?? this.members,
+      friendships: friendships ?? this.friendships,
+      bookingParticipants: bookingParticipants ?? this.bookingParticipants,
       loading: loading ?? this.loading,
       message: message ?? this.message,
     );
@@ -501,7 +588,149 @@ class PlayGridState {
       ..sort((Booking a, Booking b) => a.startAt.compareTo(b.startAt));
   }
 
+  List<Booking> cancelledBookingsFor(String userId) {
+    return bookings
+        .where((Booking booking) =>
+            booking.userId == userId &&
+            booking.status == BookingStatus.cancelled)
+        .toList()
+      ..sort((Booking a, Booking b) => b.startAt.compareTo(a.startAt));
+  }
+
   List<Game> openGames() {
     return games.where((Game game) => game.status == GameStatus.open).toList();
+  }
+
+  /// Resolves a member by id, falling back to the signed-in profile.
+  AppUserProfile? memberById(String userId) {
+    for (final AppUserProfile member in members) {
+      if (member.id == userId) {
+        return member;
+      }
+    }
+    if (profile != null && profile!.id == userId) {
+      return profile;
+    }
+    return null;
+  }
+
+  /// Human-friendly name for a roster entry ("You" for the current user).
+  String displayName(String userId) {
+    if (userId == session.userId) {
+      return 'You';
+    }
+    return memberById(userId)?.name ?? 'Member';
+  }
+
+  List<GamePlayer> joinedPlayers(String gameId) {
+    return gamePlayers
+        .where((GamePlayer player) =>
+            player.gameId == gameId && player.status == PlayerStatus.joined)
+        .toList()
+      ..sort((GamePlayer a, GamePlayer b) => a.joinedAt.compareTo(b.joinedAt));
+  }
+
+  List<GamePlayer> waitlistedPlayers(String gameId) {
+    return gamePlayers
+        .where((GamePlayer player) =>
+            player.gameId == gameId && player.status == PlayerStatus.waitlisted)
+        .toList()
+      ..sort((GamePlayer a, GamePlayer b) => a.joinedAt.compareTo(b.joinedAt));
+  }
+
+  PlayerStatus? playerStatusFor(String gameId, String userId) {
+    for (final GamePlayer player in gamePlayers) {
+      if (player.gameId == gameId && player.userId == userId) {
+        return player.status;
+      }
+    }
+    return null;
+  }
+
+  List<GroupMember> membersOf(String groupId) {
+    return groupMembers
+        .where((GroupMember member) => member.groupId == groupId)
+        .toList()
+      ..sort(
+          (GroupMember a, GroupMember b) => a.joinedAt.compareTo(b.joinedAt));
+  }
+
+  int unreadNotificationCount(String userId) {
+    return notifications
+        .where((NotificationItem item) => item.userId == userId && !item.isRead)
+        .length;
+  }
+
+  /// A player counts as "in" a game when joined or waitlisted (not merely
+  /// invited or declined).
+  bool isPlayerActive(String gameId, String userId) {
+    final PlayerStatus? status = playerStatusFor(gameId, userId);
+    return status == PlayerStatus.joined || status == PlayerStatus.waitlisted;
+  }
+
+  List<GamePlayer> invitedPlayers(String gameId) {
+    return gamePlayers
+        .where((GamePlayer player) =>
+            player.gameId == gameId && player.status == PlayerStatus.invited)
+        .toList();
+  }
+
+  // --- Friends -------------------------------------------------------------
+
+  /// Accepted friend user ids for [userId].
+  List<String> friendIdsOf(String userId) {
+    return friendships
+        .where((Friendship f) =>
+            f.status == FriendshipStatus.accepted && f.involves(userId))
+        .map((Friendship f) => f.otherUserId(userId))
+        .toList(growable: false);
+  }
+
+  List<Friendship> incomingFriendRequests(String userId) {
+    return friendships
+        .where((Friendship f) =>
+            f.status == FriendshipStatus.pending && f.addresseeId == userId)
+        .toList(growable: false);
+  }
+
+  List<Friendship> outgoingFriendRequests(String userId) {
+    return friendships
+        .where((Friendship f) =>
+            f.status == FriendshipStatus.pending && f.requesterId == userId)
+        .toList(growable: false);
+  }
+
+  Friendship? friendshipBetween(String a, String b) {
+    for (final Friendship f in friendships) {
+      if (f.involves(a) && f.involves(b)) {
+        return f;
+      }
+    }
+    return null;
+  }
+
+  int pendingFriendRequestCount(String userId) =>
+      incomingFriendRequests(userId).length;
+
+  // --- Shared bookings -----------------------------------------------------
+
+  List<BookingParticipant> participantsOf(String bookingId) {
+    return bookingParticipants
+        .where((BookingParticipant p) => p.bookingId == bookingId)
+        .toList(growable: false);
+  }
+
+  /// Active bookings the user was invited to by someone else.
+  List<Booking> sharedBookingsFor(String userId) {
+    final Set<String> sharedIds = bookingParticipants
+        .where((BookingParticipant p) =>
+            p.userId == userId && p.status != ParticipantStatus.declined)
+        .map((BookingParticipant p) => p.bookingId)
+        .toSet();
+    return bookings
+        .where((Booking b) =>
+            sharedIds.contains(b.id) && b.userId != userId && b.isActive)
+        .toList()
+      ..sort((Booking a, Booking b) => a.startAt.compareTo(b.startAt));
   }
 }

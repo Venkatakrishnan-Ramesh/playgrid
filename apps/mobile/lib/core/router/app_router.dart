@@ -5,6 +5,7 @@ import '../../features/admin/presentation/admin_screens.dart';
 import '../../features/auth/domain/playgrid_controller.dart';
 import '../../features/auth/presentation/auth_screens.dart';
 import '../../features/events/presentation/events_screen.dart';
+import '../../features/friends/presentation/friends_screen.dart';
 import '../../features/games/presentation/game_screens.dart';
 import '../../features/groups/presentation/group_screens.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -78,6 +79,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const ProfileScreen(),
       ),
       GoRoute(
+        path: RoutePaths.friends,
+        name: 'friends',
+        builder: (_, __) => const FriendsScreen(),
+      ),
+      GoRoute(
         path: RoutePaths.sports,
         name: 'sports',
         builder: (_, __) => const SportsScreen(),
@@ -124,6 +130,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.groups,
         name: 'groups',
         builder: (_, __) => const GroupsScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.groupCreate,
+        name: 'createGroup',
+        builder: (_, __) => const CreateGroupScreen(),
       ),
       GoRoute(
         path: RoutePaths.groupDetail,

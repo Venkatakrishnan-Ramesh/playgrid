@@ -30,7 +30,7 @@ class AdminDashboardScreen extends ConsumerWidget {
             title: 'Manage venues',
             subtitle: 'Add, edit, and review venue inventory',
             icon: Icons.storefront_outlined,
-            onTap: () => context.go('/admin/venues'),
+            onTap: () => context.push('/admin/venues'),
           ),
           const SizedBox(height: 12),
           const FeatureCard(

@@ -31,6 +31,48 @@ class PlayGridMockData {
     updatedAt: DateTime(2026, 3, 9),
   );
 
+  /// Directory of members referenced by bookings, games, and groups so the UI
+  /// can show real names in rosters instead of opaque user ids.
+  static final List<AppUserProfile> members = <AppUserProfile>[
+    memberProfile,
+    AppUserProfile(
+      id: 'user-002',
+      name: 'Priya Nair',
+      email: 'priya@acme.com',
+      department: 'Design',
+      avatarUrl:
+          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
+      role: UserRole.member,
+      skills: const <SportPreference>[],
+      createdAt: DateTime(2026, 1, 10),
+      updatedAt: DateTime(2026, 3, 1),
+    ),
+    AppUserProfile(
+      id: 'user-003',
+      name: 'Kevin Thomas',
+      email: 'kevin@acme.com',
+      department: 'Sales',
+      avatarUrl:
+          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+      role: UserRole.member,
+      skills: const <SportPreference>[],
+      createdAt: DateTime(2026, 1, 15),
+      updatedAt: DateTime(2026, 3, 4),
+    ),
+    AppUserProfile(
+      id: 'user-004',
+      name: 'Sara Iyer',
+      email: 'sara@acme.com',
+      department: 'Engineering',
+      avatarUrl:
+          'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
+      role: UserRole.member,
+      skills: const <SportPreference>[],
+      createdAt: DateTime(2026, 2, 1),
+      updatedAt: DateTime(2026, 3, 6),
+    ),
+  ];
+
   static const List<Sport> sports = <Sport>[
     Sport(
         id: 'sport-badminton',
@@ -191,6 +233,73 @@ class PlayGridMockData {
       userId: currentUserId,
       status: PlayerStatus.joined,
       joinedAt: DateTime(2026, 5, 18),
+    ),
+    GamePlayer(
+      gameId: 'game-1',
+      userId: 'user-002',
+      status: PlayerStatus.joined,
+      joinedAt: DateTime(2026, 5, 18, 10),
+    ),
+    GamePlayer(
+      gameId: 'game-1',
+      userId: 'user-004',
+      status: PlayerStatus.joined,
+      joinedAt: DateTime(2026, 5, 18, 11),
+    ),
+    GamePlayer(
+      gameId: 'game-2',
+      userId: 'user-003',
+      status: PlayerStatus.joined,
+      joinedAt: DateTime(2026, 5, 19),
+    ),
+    // Current user has a pending invite to game-2.
+    GamePlayer(
+      gameId: 'game-2',
+      userId: currentUserId,
+      status: PlayerStatus.invited,
+      joinedAt: DateTime(2026, 5, 19, 12),
+    ),
+  ];
+
+  static final List<Friendship> friendships = <Friendship>[
+    Friendship(
+      id: 'friend-1',
+      requesterId: currentUserId,
+      addresseeId: 'user-002',
+      status: FriendshipStatus.accepted,
+      createdAt: DateTime(2026, 4, 1),
+    ),
+    // Incoming request waiting on the current user.
+    Friendship(
+      id: 'friend-2',
+      requesterId: 'user-003',
+      addresseeId: currentUserId,
+      status: FriendshipStatus.pending,
+      createdAt: DateTime(2026, 5, 20),
+    ),
+    // Outgoing request from the current user.
+    Friendship(
+      id: 'friend-3',
+      requesterId: currentUserId,
+      addresseeId: 'user-004',
+      status: FriendshipStatus.pending,
+      createdAt: DateTime(2026, 5, 22),
+    ),
+  ];
+
+  static final List<BookingParticipant> bookingParticipants =
+      <BookingParticipant>[
+    // Priya is going to the current user's badminton booking.
+    const BookingParticipant(
+      bookingId: 'booking-1',
+      userId: 'user-002',
+      status: ParticipantStatus.going,
+    ),
+    // The current user was added to user-002's turf booking.
+    const BookingParticipant(
+      bookingId: 'booking-2',
+      userId: currentUserId,
+      status: ParticipantStatus.going,
     ),
   ];
 
