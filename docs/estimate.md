@@ -7,9 +7,9 @@
 | **Email** | _< add before sending >_ |
 | **Project** | PlayGrid Club — sports coordination mobile app |
 | **Source** | https://github.com/Venkatakrishnan-Ramesh/playgrid |
-| **Quote date** | 2026-05-20 |
+| **Quote date** | 2026-05-27 |
 | **Valid for** | 30 days |
-| **Total** | **₹20,000 (flat)** |
+| **Total** | **₹30,000 (flat)** — build delivery only; hosting billed separately (see §6) |
 
 This is an independent-contractor engagement. The freelancer is not
 an employee of the client and is responsible for their own taxes.
@@ -53,7 +53,7 @@ features are added under this estimate.
 | Settings | Privacy policy, account-deletion request, sign out |
 | Mock backend | Boots without Supabase credentials for demos |
 
-## 3. Out of scope at ₹20,000
+## 3. Out of scope at ₹30,000
 
 Requires a separate estimate:
 
@@ -101,14 +101,42 @@ starts when **all** items in §4 are received.
 
 ## 6. Payment
 
+This is a one-time **build fee**. Monthly hosting (Supabase) is a
+separate running cost the client pays directly — see "Running costs"
+below.
+
 | Stage | Amount | When |
 |---|---|---|
 | Advance | ₹10,000 | On quote sign-off, before work starts |
-| Balance | ₹10,000 | On Play Console internal-track upload + GitHub handover |
+| Balance | ₹20,000 | On Play Console internal-track upload + GitHub handover |
 
-NEFT / IMPS / UPI to the freelancer's bank account. ₹20,000 is a
-flat fee; no additional charges unless explicitly agreed in writing
-via a separate change-order.
+NEFT / IMPS / UPI to the freelancer's bank account. ₹30,000 is a
+flat build fee; no additional charges unless explicitly agreed in
+writing via a separate change-order.
+
+### Running costs (hosting — not included in the ₹30,000)
+
+The ₹30,000 covers building and delivering the app. Keeping it live
+runs on **Supabase**, billed directly to the client's account:
+
+| Item | Cost | Notes |
+|---|---:|---|
+| Supabase Pro tier | ₹2,125 / mo ($25) | 8 GB DB, 100K MAU, 250 GB bandwidth, daily backups |
+| Supabase Small compute add-on | ₹2,550 / mo ($30) | 1 vCPU / 1 GB RAM — headroom for ~5K active users |
+| **Hosting subtotal** | **≈ ₹4,675 / mo** | **≈ ₹56,100 / year** |
+
+Notes:
+
+- USD line items converted at ₹85 / $1; Supabase bills in USD and the
+  rate moves.
+- A small org can start on Supabase's **free tier (₹0)** and only move
+  to Pro once it outgrows the free limits — so early-stage hosting can
+  be effectively zero.
+- Firebase Cloud Messaging (push) is free at any scale.
+- Google Play Console developer registration is a **one-time ₹2,000**
+  paid once to Google.
+- Optional monthly maintenance retainer, FCM setup, QA, and store
+  assets are quoted in [`launch-and-running-costs.md`](launch-and-running-costs.md).
 
 ## 7. Intellectual property — License, not transfer
 
@@ -183,4 +211,4 @@ are demonstrably true:
 | Client signature | _______________________________ |
 | Date | _______________________________ |
 | Freelancer signature | Venkatakrishnan Ramesh |
-| Date | 2026-05-20 |
+| Date | 2026-05-27 |

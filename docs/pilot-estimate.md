@@ -5,7 +5,7 @@
 | **Prepared by** | Venkatakrishnan Ramesh |
 | **GitHub** | https://github.com/Venkatakrishnan-Ramesh |
 | **Email** | _< add before sending >_ |
-| **Date** | 2026-05-20 |
+| **Date** | 2026-05-27 |
 | **Quote validity** | 30 days |
 | **Currency** | Indian Rupees (₹). USD line items converted at **₹85 / $1** |
 | **Total** | **₹26,000 one-time + ₹0 / month for the pilot quarter** |
@@ -43,7 +43,7 @@ budget in [`launch-and-running-costs.md`](launch-and-running-costs.md).
 
 | Item | Cost (₹) | Notes |
 |---|---:|---|
-| Build delivery (existing MVP, re-branded) | 20,000 | Per `estimate.md` §1 |
+| Build delivery (existing MVP, re-branded) | 20,000 | Discounted pilot rate (standalone build is ₹30,000 — see `estimate.md` §1) |
 | Google Play Console developer registration | 2,000 | Skip if client already has a console; deduct ₹2,000 |
 | Pilot launch QA pass (4 hours, sanity flow on a real device) | 2,500 | Tighter than the 8-hour full-launch QA |
 | Initial seed data load (sports + venues from client's spreadsheet) | 1,500 | Up to 20 rows total |
@@ -117,7 +117,7 @@ in `estimate.md` §7 apply.
 ### Option C — Promote to full launch
 
 Switch to [`launch-and-running-costs.md`](launch-and-running-costs.md).
-The launch payment drops from ₹42,000 to **₹22,000** because the
+The launch payment drops from ₹52,000 to **₹22,000** because the
 build, QA, and seed work are already done:
 
 | Item | Pilot | Full launch upgrade |
@@ -181,4 +181,4 @@ true:
 | Client signature | _______________________________ |
 | Date | _______________________________ |
 | Freelancer signature | Venkatakrishnan Ramesh |
-| Date | 2026-05-20 |
+| Date | 2026-05-27 |

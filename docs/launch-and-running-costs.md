@@ -5,7 +5,7 @@
 | **Prepared by** | Venkatakrishnan Ramesh |
 | **GitHub** | https://github.com/Venkatakrishnan-Ramesh |
 | **Email** | _< add before sending >_ |
-| **Date** | 2026-05-20 |
+| **Date** | 2026-05-27 |
 | **Quote validity** | 30 days |
 | **Currency** | Indian Rupees (₹). USD line items converted at **₹85 / $1** |
 
@@ -25,7 +25,7 @@ separately in [`estimate.md`](estimate.md).
 | Ongoing role | Monthly retainer for bug fixes, compliance, monitoring |
 | Hosting | Supabase Pro + Small compute add-on; privacy policy on GitHub Pages |
 
-**⚠️ Honesty note.** The ₹20,000 build fee covers the existing MVP
+**⚠️ Honesty note.** The ₹30,000 build fee covers the existing MVP
 re-branded for one organization. The 5,000+ user scenario will
 **exercise** that MVP — performance tuning, query optimization,
 Realtime config, and admin tooling beyond the placeholders all
@@ -39,13 +39,13 @@ actual usage data after month 3.
 
 | Item | Cost (₹) | Notes |
 |---|---:|---|
-| Build delivery (existing MVP, re-branded) | 20,000 | Per `estimate.md` §1 |
+| Build delivery (existing MVP, re-branded) | 30,000 | Per `estimate.md` §1 |
 | FCM (push notifications) — code, AndroidManifest, server-key wiring, one test campaign | 10,000 | Free at runtime; this is dev time |
 | Google Play Console developer registration | 2,000 | One-time, lifetime, paid to Google |
 | Launch QA pass on a real device (8 hours) | 5,000 | Tracked as a separate sprint after handover |
 | Adaptive launcher icon production (foreground + background + 512×512 store icon) | 3,000 | Only if client doesn't already have a design system |
 | Play Store listing — 200-word description, 4 emulator screenshots, one feature graphic | 2,000 | Anything more (video, copywriting) is extra |
-| **One-time subtotal** | **₹42,000** | |
+| **One-time subtotal** | **₹52,000** | |
 
 ## 2. Year 1 monthly recurring
 
@@ -62,11 +62,11 @@ actual usage data after month 3.
 
 | | Amount |
 |---|---:|
-| One-time (§1) | ₹42,000 |
+| One-time (§1) | ₹52,000 |
 | Annual recurring (§2 × 12) | ₹147,300 |
-| **Year 1 total** | **₹189,300** |
+| **Year 1 total** | **₹199,300** |
 
-Payable as a ₹42,000 launch payment up front, then ₹12,275 per
+Payable as a ₹52,000 launch payment up front, then ₹12,275 per
 month. The retainer can be paid quarterly (₹22,500) or annually
 (₹85,000 — 6 % discount) if preferred.
 
@@ -149,12 +149,12 @@ client's written approval before work starts.
 | Stage | Amount (₹) | When |
 |---|---:|---|
 | Build advance | 10,000 | Quote sign-off, before work starts |
-| Build balance | 10,000 | On Play Console internal-track upload + GitHub handover |
+| Build balance | 20,000 | On Play Console internal-track upload + GitHub handover |
 | Launch payment | 22,000 | After acceptance criteria pass (§10 of `estimate.md`) — covers FCM + Play registration + QA + icon + listing |
 | Monthly retainer + infra | 12,275 | First of each month, starting month 2 |
 
-Optional discount: paying the full Year 1 (₹189,300 − 6 % retainer
-discount = **₹184,000**) up front locks the retainer rate against
+Optional discount: paying the full Year 1 (₹199,300 − 6 % retainer
+discount = **₹194,000**) up front locks the retainer rate against
 revision for 12 months.
 
 ## 9. What's outside this estimate entirely
@@ -174,4 +174,4 @@ revision for 12 months.
 | Client signature | _______________________________ |
 | Date | _______________________________ |
 | Freelancer signature | Venkatakrishnan Ramesh |
-| Date | 2026-05-20 |
+| Date | 2026-05-27 |
