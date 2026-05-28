@@ -235,6 +235,43 @@ class SupabaseMappers {
         createdAt: _timestamp(row['created_at']),
       );
 
+  static CourtSlot courtSlot(Map<String, dynamic> row) => CourtSlot(
+        id: row['id'] as String? ?? '',
+        venueId: row['venue_id'] as String? ?? '',
+        sportId: row['sport_id'] as String? ?? '',
+        startAt: _timestamp(row['start_at']).toLocal(),
+        endAt: _timestamp(row['end_at']).toLocal(),
+        capacity: (row['capacity'] as num?)?.toInt() ?? 1,
+        isOpen: row['is_open'] as bool? ?? true,
+      );
+
+  static SlotRequest slotRequest(Map<String, dynamic> row) => SlotRequest(
+        id: row['id'] as String? ?? '',
+        slotId: row['slot_id'] as String? ?? '',
+        userId: row['user_id'] as String? ?? '',
+        status: slotRequestStatus(row['status'] as String?),
+        notes: row['notes'] as String? ?? '',
+        createdAt: _timestamp(row['created_at']),
+        decidedAt: row['decided_at'] == null
+            ? null
+            : _timestamp(row['decided_at']),
+        decidedBy: row['decided_by'] as String?,
+      );
+
+  static SlotRequestStatus slotRequestStatus(String? raw) {
+    switch (raw) {
+      case 'approved':
+        return SlotRequestStatus.approved;
+      case 'rejected':
+        return SlotRequestStatus.rejected;
+      case 'cancelled':
+        return SlotRequestStatus.cancelled;
+      case 'pending':
+      default:
+        return SlotRequestStatus.pending;
+    }
+  }
+
   static DateTime _timestamp(dynamic raw) {
     if (raw is String && raw.isNotEmpty) {
       return DateTime.tryParse(raw)?.toUtc() ?? DateTime.now().toUtc();

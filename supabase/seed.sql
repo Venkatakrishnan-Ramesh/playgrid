@@ -5,6 +5,7 @@ begin;
 -- ===========================================================================
 insert into public.sports (name, slug, description, icon_name, is_active)
 values
+  ('Tennis', 'tennis', 'Admin-managed court bookings reviewed per request.', 'sports_tennis', true),
   ('Badminton', 'badminton', 'Fast indoor rally sport.', 'sports_tennis', true),
   ('Cricket', 'cricket', 'Organized nets, box cricket, and tournament play.', 'sports_cricket', true),
   ('Football', 'football', '5-a-side and full pitch bookings.', 'sports_soccer', true),
@@ -26,7 +27,8 @@ values
   ('North Campus Sports Hub', 'north-campus-sports-hub', 'Organized turf and court bookings for teams and employee clubs.', '88 Enterprise Avenue', 'Bengaluru', 12.9352000, 77.6245000, '{"mon-fri":{"open":"05:30","close":"21:30"},"sat-sun":{"open":"06:00","close":"21:30"}}', '["parking","cafe","showers","spectator_seating"]', '["football","cricket","volleyball"]', '+91-90000-22222', true),
   ('Skyline Court Club', 'skyline-court-club', 'Compact venue for after-work games and structured leagues.', '41 Startup Street', 'Bengaluru', 12.9098000, 77.6387000, '{"mon-fri":{"open":"07:00","close":"23:00"},"sat-sun":{"open":"08:00","close":"23:00"}}', '["parking","lights","changing_room"]', '["badminton","football","basketball"]', '+91-90000-33333', true),
   ('Riverside Turf', 'riverside-turf', 'Floodlit 7-a-side turf beside the river promenade.', '5 Riverside Walk', 'Bengaluru', 12.9600000, 77.6400000, '{"mon-fri":{"open":"06:00","close":"23:00"},"sat-sun":{"open":"06:00","close":"23:30"}}', '["parking","lights","cafe"]', '["football","cricket"]', '+91-90000-44444', true),
-  ('Downtown Smash Center', 'downtown-smash-center', 'Air-conditioned badminton and table tennis hall.', '210 MG Road', 'Bengaluru', 12.9750000, 77.6050000, '{"mon-fri":{"open":"06:30","close":"22:00"},"sat-sun":{"open":"07:00","close":"22:00"}}', '["parking","ac","pro_shop"]', '["badminton","table-tennis"]', '+91-90000-55555', true)
+  ('Downtown Smash Center', 'downtown-smash-center', 'Air-conditioned badminton and table tennis hall.', '210 MG Road', 'Bengaluru', 12.9750000, 77.6050000, '{"mon-fri":{"open":"06:30","close":"22:00"},"sat-sun":{"open":"07:00","close":"22:00"}}', '["parking","ac","pro_shop"]', '["badminton","table-tennis"]', '+91-90000-55555', true),
+  ('PlayGrid Tennis Court', 'playgrid-tennis-court', 'Clay-style tennis court with floodlights. Booked via admin approval for member-friendly pricing.', '7 Koramangala 4th Block', 'Bengaluru', 12.9352000, 77.6245000, '{"mon-fri":{"open":"06:00","close":"22:00"},"sat-sun":{"open":"06:00","close":"22:00"}}', '["parking","lights","showers"]', '["tennis"]', '+91-90000-66666', true)
 on conflict (slug) do update
 set name = excluded.name,
     description = excluded.description,
@@ -62,7 +64,8 @@ from (values
   ('11111111-1111-1111-1111-111111111111'::uuid, 'priya@acme.com', 'Priya Nair'),
   ('22222222-2222-2222-2222-222222222222'::uuid, 'kevin@acme.com', 'Kevin Thomas'),
   ('33333333-3333-3333-3333-333333333333'::uuid, 'sara@acme.com', 'Sara Iyer'),
-  ('44444444-4444-4444-4444-444444444444'::uuid, 'diego@acme.com', 'Diego Alvarez')
+  ('44444444-4444-4444-4444-444444444444'::uuid, 'diego@acme.com', 'Diego Alvarez'),
+  ('99999999-9999-9999-9999-999999999999'::uuid, 'admin@playgrid.club', 'Court Admin')
 ) as u(id, email, name)
 on conflict (id) do nothing;
 
@@ -78,7 +81,8 @@ from (values
   ('11111111-1111-1111-1111-111111111111'::uuid, 'priya@acme.com'),
   ('22222222-2222-2222-2222-222222222222'::uuid, 'kevin@acme.com'),
   ('33333333-3333-3333-3333-333333333333'::uuid, 'sara@acme.com'),
-  ('44444444-4444-4444-4444-444444444444'::uuid, 'diego@acme.com')
+  ('44444444-4444-4444-4444-444444444444'::uuid, 'diego@acme.com'),
+  ('99999999-9999-9999-9999-999999999999'::uuid, 'admin@playgrid.club')
 ) as u(id, email)
 on conflict do nothing;
 
@@ -91,9 +95,16 @@ from (values
   ('11111111-1111-1111-1111-111111111111'::uuid, 'Design', 'https://i.pravatar.cc/150?img=5', 'advanced'::public.skill_level),
   ('22222222-2222-2222-2222-222222222222'::uuid, 'Sales', 'https://i.pravatar.cc/150?img=12', 'intermediate'::public.skill_level),
   ('33333333-3333-3333-3333-333333333333'::uuid, 'Engineering', 'https://i.pravatar.cc/150?img=32', 'advanced'::public.skill_level),
-  ('44444444-4444-4444-4444-444444444444'::uuid, 'Marketing', 'https://i.pravatar.cc/150?img=15', 'beginner'::public.skill_level)
+  ('44444444-4444-4444-4444-444444444444'::uuid, 'Marketing', 'https://i.pravatar.cc/150?img=15', 'beginner'::public.skill_level),
+  ('99999999-9999-9999-9999-999999999999'::uuid, 'Operations', 'https://i.pravatar.cc/150?img=68', 'beginner'::public.skill_level)
 ) as v(id, department, avatar_url, skill_level)
 where p.id = v.id;
+
+-- Promote the seeded admin account so the RLS `is_admin()` helper returns true.
+update public.profiles
+  set role = 'admin'::public.profile_role,
+      name = 'Court Admin'
+  where id = '99999999-9999-9999-9999-999999999999';
 
 -- ===========================================================================
 -- Games (status 'open' so every signed-in member can see them)
@@ -145,5 +156,37 @@ insert into public.events (created_by, venue_id, sport_id, event_kind, title, de
 values
   ('33333333-3333-3333-3333-333333333333', (select id from public.venues where slug='playgrid-arena'), (select id from public.sports where slug='badminton'), 'tournament', 'Inter-Department Tournament', 'Badminton and football finals this quarter.', now() + interval '7 days', now() + interval '7 days 4 hours', 64, 'published'),
   ('22222222-2222-2222-2222-222222222222', (select id from public.venues where slug='north-campus-sports-hub'), null, 'announcement', 'Summer Sports Meet — Registrations Open', 'Sign up your team across five sports.', now() + interval '14 days', now() + interval '14 days 6 hours', null, 'published');
+
+-- ===========================================================================
+-- Tennis court slots — admin-published, member-requested.
+-- ===========================================================================
+insert into public.court_slots (venue_id, sport_id, start_at, end_at, capacity, is_open, created_by)
+select
+  v.id,
+  s.id,
+  date_trunc('day', now()) + (d.day_offset || ' days')::interval + (t.hour || ' hours')::interval,
+  date_trunc('day', now()) + (d.day_offset || ' days')::interval + ((t.hour + 1) || ' hours')::interval,
+  1, true,
+  '99999999-9999-9999-9999-999999999999'::uuid
+from public.venues v
+cross join public.sports s
+cross join (values (0), (1), (2)) as d(day_offset)
+cross join (values (17), (18), (19), (20)) as t(hour)
+where v.slug = 'playgrid-tennis-court'
+  and s.slug = 'tennis'
+on conflict (venue_id, sport_id, start_at) do nothing;
+
+-- Two competing pending requests on tomorrow's 6 PM slot so the admin
+-- dashboard has something concrete to review out of the box.
+insert into public.slot_requests (slot_id, user_id, status, notes)
+select cs.id, u.user_id, 'pending'::public.slot_request_status, u.notes
+from public.court_slots cs
+join public.venues v on v.id = cs.venue_id and v.slug = 'playgrid-tennis-court'
+join (values
+  ('11111111-1111-1111-1111-111111111111'::uuid, 'Singles practice with coach.'),
+  ('22222222-2222-2222-2222-222222222222'::uuid, 'Doubles with the sales team.')
+) as u(user_id, notes) on true
+where cs.start_at = date_trunc('day', now()) + interval '1 day' + interval '18 hours'
+on conflict do nothing;
 
 commit;

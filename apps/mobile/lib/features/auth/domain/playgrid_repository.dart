@@ -133,4 +133,80 @@ abstract class PlayGridRepository {
     required PlayGridSession session,
     required String reason,
   });
+
+  // --- Court slots & requests ----------------------------------------------
+
+  /// Member: request a published [CourtSlot]. Multiple users can request the
+  /// same slot — admins resolve via [approveSlotRequest].
+  Future<PlayGridState> requestSlot({
+    required PlayGridSession session,
+    required String slotId,
+    required String notes,
+  });
+
+  /// Member: cancel their own pending request.
+  Future<PlayGridState> cancelSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+  });
+
+  /// Admin: approve a request. Auto-rejects every other pending request for
+  /// the same slot once the slot's capacity is reached, and creates a
+  /// `Booking` for the approved user. Notifies all affected members.
+  Future<PlayGridState> approveSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+  });
+
+  /// Admin: reject a single pending request. Notifies the member.
+  Future<PlayGridState> rejectSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+    String? reason,
+  });
+
+  /// Admin: bulk-publish slots across a date range. Generates one [CourtSlot]
+  /// per (date, time-of-day) pair. Skips combinations that already exist.
+  Future<PlayGridState> addCourtSlots({
+    required PlayGridSession session,
+    required String venueId,
+    required String sportId,
+    required DateTime startDate,
+    required DateTime endDate,
+    required List<TimeOfDayValue> startTimes,
+    required Duration duration,
+    int capacity,
+  });
+
+  /// Admin: remove a slot. Pending requests are cancelled and requesters
+  /// notified. Approved requests are also cancelled (the booking is removed)
+  /// — admins use this for actual deletions and the UI confirms first.
+  Future<PlayGridState> removeCourtSlot({
+    required PlayGridSession session,
+    required String slotId,
+  });
+
+  /// Emits whenever server-side data the [session] cares about changes
+  /// (court slots, slot requests, bookings, notifications). Listeners
+  /// typically respond by calling `bootstrap` to re-fetch.
+  ///
+  /// The local repository returns an empty stream — local state changes
+  /// already propagate through the controller's existing notifyListeners().
+  Stream<void> watchChanges({required PlayGridSession session});
+}
+
+/// Simple value type for an hour/minute pair that does not depend on Flutter
+/// `TimeOfDay`, so it is safe to use across the domain + repository layer.
+class TimeOfDayValue {
+  const TimeOfDayValue({required this.hour, required this.minute});
+
+  final int hour;
+  final int minute;
+
+  @override
+  bool operator ==(Object other) =>
+      other is TimeOfDayValue && other.hour == hour && other.minute == minute;
+
+  @override
+  int get hashCode => Object.hash(hour, minute);
 }

@@ -19,7 +19,11 @@ class LocalPlayGridRepository implements PlayGridRepository {
         _members = List<AppUserProfile>.from(PlayGridMockData.members),
         _friendships = List<Friendship>.from(PlayGridMockData.friendships),
         _bookingParticipants =
-            List<BookingParticipant>.from(PlayGridMockData.bookingParticipants);
+            List<BookingParticipant>.from(PlayGridMockData.bookingParticipants),
+        _courtSlots =
+            List<CourtSlot>.from(PlayGridMockData.generateCourtSlots()),
+        _slotRequests =
+            List<SlotRequest>.from(PlayGridMockData.generateSlotRequests());
 
   final List<Sport> _sports;
   final List<Venue> _venues;
@@ -34,6 +38,8 @@ class LocalPlayGridRepository implements PlayGridRepository {
   final List<AppUserProfile> _members;
   final List<Friendship> _friendships;
   final List<BookingParticipant> _bookingParticipants;
+  final List<CourtSlot> _courtSlots;
+  final List<SlotRequest> _slotRequests;
 
   PlayGridState _stateFor(PlayGridSession session, {AppUserProfile? profile}) {
     return PlayGridState(
@@ -55,14 +61,26 @@ class LocalPlayGridRepository implements PlayGridRepository {
       friendships: List<Friendship>.unmodifiable(_friendships),
       bookingParticipants:
           List<BookingParticipant>.unmodifiable(_bookingParticipants),
+      courtSlots: List<CourtSlot>.unmodifiable(_courtSlots),
+      slotRequests: List<SlotRequest>.unmodifiable(_slotRequests),
       loading: false,
       message: profile == null ? 'Ready to sign in.' : 'Loaded PlayGrid Club.',
     );
   }
 
+  /// Resolves the profile for [session] from the member directory so that
+  /// admin sessions return the admin profile (and not the default member
+  /// profile spoofed onto a different id).
   AppUserProfile? _profileFor(PlayGridSession session) {
     if (!session.isAuthenticated || !session.profileComplete) {
       return null;
+    }
+    for (final AppUserProfile member in _members) {
+      if (member.id == session.userId) {
+        return member.copyWith(
+          email: session.email.isEmpty ? member.email : session.email,
+        );
+      }
     }
     return PlayGridMockData.memberProfile.copyWith(
       id: session.userId,
@@ -695,5 +713,354 @@ class LocalPlayGridRepository implements PlayGridRepository {
     );
     return _stateFor(session, profile: _profileFor(session))
         .copyWith(message: 'Deletion request submitted.');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Court slots & slot requests
+  // ---------------------------------------------------------------------------
+
+  CourtSlot _slotById(String id) => _courtSlots.firstWhere(
+        (CourtSlot s) => s.id == id,
+        orElse: () => throw const AppFailure('Slot not found.'),
+      );
+
+  void _requireAdmin(PlayGridSession session) {
+    final AppUserProfile? profile = _profileFor(session);
+    if (!session.isAdmin && !(profile?.isAdmin ?? false)) {
+      throw const AppFailure('Admin access required.');
+    }
+  }
+
+  @override
+  Future<PlayGridState> requestSlot({
+    required PlayGridSession session,
+    required String slotId,
+    required String notes,
+  }) async {
+    if (!session.isAuthenticated) {
+      throw const AppFailure('Sign in to request a slot.');
+    }
+    final CourtSlot slot = _slotById(slotId);
+    if (!slot.isOpen) {
+      throw const AppFailure('This slot is no longer open for requests.');
+    }
+    if (slot.startAt.isBefore(DateTime.now())) {
+      throw const AppFailure('That slot has already started.');
+    }
+    final SlotRequest? existing =
+        _slotRequests.where((SlotRequest r) =>
+            r.slotId == slotId &&
+            r.userId == session.userId &&
+            (r.status == SlotRequestStatus.pending ||
+                r.status == SlotRequestStatus.approved)).firstOrNull;
+    if (existing != null) {
+      throw const AppFailure('You have already requested this slot.');
+    }
+    _slotRequests.add(
+      SlotRequest(
+        id: 'req-${DateTime.now().microsecondsSinceEpoch}',
+        slotId: slotId,
+        userId: session.userId,
+        status: SlotRequestStatus.pending,
+        notes: notes.trim(),
+        createdAt: DateTime.now(),
+        decidedAt: null,
+        decidedBy: null,
+      ),
+    );
+    // Notify every admin in the directory so they can review the request.
+    final String requesterName = _memberName(session.userId);
+    for (final AppUserProfile member in _members) {
+      if (member.isAdmin) {
+        _pushNotification(
+          userId: member.id,
+          title: 'New slot request',
+          body:
+              '$requesterName requested ${_slotLabel(slot)}. Open the admin '
+              'dashboard to review.',
+          type: NotificationType.system,
+        );
+      }
+    }
+    return _stateFor(session, profile: _profileFor(session))
+        .copyWith(message: 'Request submitted. Waiting for admin approval.');
+  }
+
+  @override
+  Future<PlayGridState> cancelSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+  }) async {
+    final int index =
+        _slotRequests.indexWhere((SlotRequest r) => r.id == requestId);
+    if (index == -1) {
+      throw const AppFailure('Request not found.');
+    }
+    final SlotRequest request = _slotRequests[index];
+    if (request.userId != session.userId) {
+      throw const AppFailure('You can only cancel your own requests.');
+    }
+    if (request.status != SlotRequestStatus.pending) {
+      throw const AppFailure('Only pending requests can be cancelled.');
+    }
+    _slotRequests[index] = request.copyWith(
+      status: SlotRequestStatus.cancelled,
+      decidedAt: DateTime.now(),
+      decidedBy: session.userId,
+    );
+    return _stateFor(session, profile: _profileFor(session))
+        .copyWith(message: 'Request cancelled.');
+  }
+
+  @override
+  Future<PlayGridState> approveSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+  }) async {
+    _requireAdmin(session);
+    final int index =
+        _slotRequests.indexWhere((SlotRequest r) => r.id == requestId);
+    if (index == -1) {
+      throw const AppFailure('Request not found.');
+    }
+    final SlotRequest target = _slotRequests[index];
+    if (target.status != SlotRequestStatus.pending) {
+      throw const AppFailure('Request has already been decided.');
+    }
+    final CourtSlot slot = _slotById(target.slotId);
+    final int alreadyApproved = _slotRequests
+        .where((SlotRequest r) =>
+            r.slotId == slot.id && r.status == SlotRequestStatus.approved)
+        .length;
+    if (alreadyApproved >= slot.capacity) {
+      throw const AppFailure('Slot capacity has already been reached.');
+    }
+    final DateTime now = DateTime.now();
+    _slotRequests[index] = target.copyWith(
+      status: SlotRequestStatus.approved,
+      decidedAt: now,
+      decidedBy: session.userId,
+    );
+
+    // Create the backing booking so this approval shows up in My Bookings.
+    final String bookingId = 'booking-req-${target.id}';
+    _bookings.removeWhere((Booking b) => b.id == bookingId);
+    _bookings.add(
+      Booking(
+        id: bookingId,
+        userId: target.userId,
+        venueId: slot.venueId,
+        sportId: slot.sportId,
+        startAt: slot.startAt,
+        endAt: slot.endAt,
+        status: BookingStatus.confirmed,
+        createdAt: now,
+        notes: target.notes,
+      ),
+    );
+
+    final String slotLabel = _slotLabel(slot);
+    _pushNotification(
+      userId: target.userId,
+      title: 'Request approved',
+      body: 'Your $slotLabel slot has been approved. Enjoy the game!',
+      type: NotificationType.booking,
+    );
+
+    // Auto-reject every other still-pending request for this slot if the
+    // slot is now fully booked. (capacity-1 had already been booked above.)
+    final int approvedAfter = alreadyApproved + 1;
+    if (approvedAfter >= slot.capacity) {
+      for (int i = 0; i < _slotRequests.length; i++) {
+        final SlotRequest other = _slotRequests[i];
+        if (other.slotId != slot.id || other.id == target.id) {
+          continue;
+        }
+        if (other.status != SlotRequestStatus.pending) {
+          continue;
+        }
+        _slotRequests[i] = other.copyWith(
+          status: SlotRequestStatus.rejected,
+          decidedAt: now,
+          decidedBy: session.userId,
+        );
+        _pushNotification(
+          userId: other.userId,
+          title: 'Request not approved',
+          body:
+              'Your $slotLabel slot was given to another member. Try '
+              'another time?',
+          type: NotificationType.booking,
+        );
+      }
+      // Close the slot so the calendar stops showing it as bookable.
+      final int slotIndex =
+          _courtSlots.indexWhere((CourtSlot s) => s.id == slot.id);
+      if (slotIndex != -1) {
+        _courtSlots[slotIndex] = slot.copyWith(isOpen: false);
+      }
+    }
+    return _stateFor(session, profile: _profileFor(session))
+        .copyWith(message: 'Approved and notifications sent.');
+  }
+
+  @override
+  Future<PlayGridState> rejectSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+    String? reason,
+  }) async {
+    _requireAdmin(session);
+    final int index =
+        _slotRequests.indexWhere((SlotRequest r) => r.id == requestId);
+    if (index == -1) {
+      throw const AppFailure('Request not found.');
+    }
+    final SlotRequest target = _slotRequests[index];
+    if (target.status != SlotRequestStatus.pending) {
+      throw const AppFailure('Request has already been decided.');
+    }
+    final DateTime now = DateTime.now();
+    _slotRequests[index] = target.copyWith(
+      status: SlotRequestStatus.rejected,
+      decidedAt: now,
+      decidedBy: session.userId,
+    );
+    final CourtSlot slot = _slotById(target.slotId);
+    final String slotLabel = _slotLabel(slot);
+    final String body = (reason ?? '').trim().isEmpty
+        ? 'Your $slotLabel slot was not approved.'
+        : 'Your $slotLabel slot was not approved: ${reason!.trim()}';
+    _pushNotification(
+      userId: target.userId,
+      title: 'Request not approved',
+      body: body,
+      type: NotificationType.booking,
+    );
+    return _stateFor(session, profile: _profileFor(session))
+        .copyWith(message: 'Request rejected.');
+  }
+
+  @override
+  Future<PlayGridState> addCourtSlots({
+    required PlayGridSession session,
+    required String venueId,
+    required String sportId,
+    required DateTime startDate,
+    required DateTime endDate,
+    required List<TimeOfDayValue> startTimes,
+    required Duration duration,
+    int capacity = 1,
+  }) async {
+    _requireAdmin(session);
+    if (startTimes.isEmpty) {
+      throw const AppFailure('Pick at least one start time.');
+    }
+    if (duration.inMinutes <= 0) {
+      throw const AppFailure('Duration must be positive.');
+    }
+    if (capacity <= 0) {
+      throw const AppFailure('Capacity must be at least 1.');
+    }
+    final DateTime startDay =
+        DateTime(startDate.year, startDate.month, startDate.day);
+    final DateTime endDay = DateTime(endDate.year, endDate.month, endDate.day);
+    if (endDay.isBefore(startDay)) {
+      throw const AppFailure('End date must be on or after the start date.');
+    }
+    int created = 0;
+    for (DateTime day = startDay;
+        !day.isAfter(endDay);
+        day = day.add(const Duration(days: 1))) {
+      for (final TimeOfDayValue t in startTimes) {
+        final DateTime start =
+            DateTime(day.year, day.month, day.day, t.hour, t.minute);
+        final DateTime end = start.add(duration);
+        final bool clashes = _courtSlots.any((CourtSlot s) =>
+            s.venueId == venueId &&
+            s.sportId == sportId &&
+            s.startAt == start);
+        if (clashes) {
+          continue;
+        }
+        _courtSlots.add(
+          CourtSlot(
+            id: 'slot-${DateTime.now().microsecondsSinceEpoch}-$created',
+            venueId: venueId,
+            sportId: sportId,
+            startAt: start,
+            endAt: end,
+            capacity: capacity,
+            isOpen: true,
+          ),
+        );
+        created++;
+      }
+    }
+    return _stateFor(session, profile: _profileFor(session)).copyWith(
+        message: created == 0
+            ? 'No new slots created — they already existed.'
+            : 'Published $created slot${created == 1 ? '' : 's'}.');
+  }
+
+  @override
+  Future<PlayGridState> removeCourtSlot({
+    required PlayGridSession session,
+    required String slotId,
+  }) async {
+    _requireAdmin(session);
+    final CourtSlot slot = _slotById(slotId);
+    final String slotLabel = _slotLabel(slot);
+    final DateTime now = DateTime.now();
+
+    // Cancel any pending requests and notify those members.
+    for (int i = 0; i < _slotRequests.length; i++) {
+      final SlotRequest r = _slotRequests[i];
+      if (r.slotId != slotId) {
+        continue;
+      }
+      if (r.status == SlotRequestStatus.pending) {
+        _slotRequests[i] = r.copyWith(
+          status: SlotRequestStatus.cancelled,
+          decidedAt: now,
+          decidedBy: session.userId,
+        );
+        _pushNotification(
+          userId: r.userId,
+          title: 'Slot removed',
+          body: 'The $slotLabel slot was removed by the admin.',
+          type: NotificationType.booking,
+        );
+      } else if (r.status == SlotRequestStatus.approved) {
+        _slotRequests[i] = r.copyWith(
+          status: SlotRequestStatus.cancelled,
+          decidedAt: now,
+          decidedBy: session.userId,
+        );
+        _bookings.removeWhere(
+            (Booking b) => b.id == 'booking-req-${r.id}');
+        _pushNotification(
+          userId: r.userId,
+          title: 'Booking cancelled',
+          body:
+              'Your $slotLabel booking was cancelled because the slot was '
+              'removed.',
+          type: NotificationType.booking,
+        );
+      }
+    }
+    _courtSlots.removeWhere((CourtSlot s) => s.id == slotId);
+    return _stateFor(session, profile: _profileFor(session))
+        .copyWith(message: 'Slot removed.');
+  }
+
+  @override
+  Stream<void> watchChanges({required PlayGridSession session}) =>
+      const Stream<void>.empty();
+
+  String _slotLabel(CourtSlot slot) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final DateTime d = slot.startAt;
+    return '${two(d.day)}/${two(d.month)} ${slot.label}';
   }
 }

@@ -2,6 +2,45 @@ import 'playgrid_models.dart';
 
 class PlayGridMockData {
   static const String currentUserId = 'user-001';
+  static const String adminUserId = 'user-admin';
+
+  /// Test accounts that the local repository will accept on the sign-in
+  /// screen. The admin account routes the user to the admin tab; the others
+  /// are regular members.
+  ///
+  /// Every account uses the password `password` for local development.
+  static const List<({String email, String userId, UserRole role, String name})>
+      knownAccounts = <({
+    String email,
+    String userId,
+    UserRole role,
+    String name
+  })>[
+    (
+      email: 'admin@playgrid.club',
+      userId: adminUserId,
+      role: UserRole.admin,
+      name: 'Court Admin',
+    ),
+    (
+      email: 'arjun@acme.com',
+      userId: currentUserId,
+      role: UserRole.member,
+      name: 'Arjun Rao',
+    ),
+    (
+      email: 'priya@acme.com',
+      userId: 'user-002',
+      role: UserRole.member,
+      name: 'Priya Nair',
+    ),
+    (
+      email: 'kevin@acme.com',
+      userId: 'user-003',
+      role: UserRole.member,
+      name: 'Kevin Thomas',
+    ),
+  ];
 
   static const PlayGridSession guestSession = PlayGridSession.guest();
 
@@ -31,9 +70,23 @@ class PlayGridMockData {
     updatedAt: DateTime(2026, 3, 9),
   );
 
+  static final AppUserProfile adminProfile = AppUserProfile(
+    id: adminUserId,
+    name: 'Court Admin',
+    email: 'admin@playgrid.club',
+    department: 'Operations',
+    avatarUrl:
+        'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400',
+    role: UserRole.admin,
+    skills: const <SportPreference>[],
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+  );
+
   /// Directory of members referenced by bookings, games, and groups so the UI
   /// can show real names in rosters instead of opaque user ids.
   static final List<AppUserProfile> members = <AppUserProfile>[
+    adminProfile,
     memberProfile,
     AppUserProfile(
       id: 'user-002',
@@ -73,7 +126,19 @@ class PlayGridMockData {
     ),
   ];
 
+  /// Sport that the request/approve flow currently focuses on.
+  static const String tennisSportId = 'sport-tennis';
+
+  /// Default tennis venue used by the slot manager when seeding from scratch.
+  static const String tennisVenueId = 'venue-tennis';
+
   static const List<Sport> sports = <Sport>[
+    Sport(
+        id: tennisSportId,
+        name: 'Tennis',
+        icon: 'sports_tennis',
+        isActive: true,
+        sortOrder: 0),
     Sport(
         id: 'sport-badminton',
         name: 'Badminton',
@@ -107,6 +172,19 @@ class PlayGridMockData {
   ];
 
   static const List<Venue> venues = <Venue>[
+    Venue(
+      id: tennisVenueId,
+      name: 'PlayGrid Tennis Court',
+      location: 'Koramangala, Bengaluru',
+      description:
+          'Clay-style tennis court with floodlights — booked via admin '
+          'approval for member-friendly pricing.',
+      surfaceType: 'Clay',
+      capacity: 4,
+      imageUrl:
+          'https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?w=900',
+      isActive: true,
+    ),
     Venue(
       id: 'venue-alpha',
       name: 'Alpha Sports Arena',
@@ -372,4 +450,67 @@ class PlayGridMockData {
       createdAt: DateTime(2026, 5, 18, 9, 45),
     ),
   ];
+
+  /// Generates seed court slots starting today + a few competing requests so
+  /// the admin dashboard has something to act on out of the box.
+  static List<CourtSlot> generateCourtSlots({DateTime? from}) {
+    final DateTime base = from ?? DateTime.now();
+    final DateTime today = DateTime(base.year, base.month, base.day);
+    final List<CourtSlot> result = <CourtSlot>[];
+    // Three days × four evening slots = 12 published tennis slots.
+    const List<({int hour, int minute})> times = <({int hour, int minute})>[
+      (hour: 17, minute: 0),
+      (hour: 18, minute: 0),
+      (hour: 19, minute: 0),
+      (hour: 20, minute: 0),
+    ];
+    for (int dayOffset = 0; dayOffset < 3; dayOffset++) {
+      final DateTime day = today.add(Duration(days: dayOffset));
+      for (final ({int hour, int minute}) t in times) {
+        final DateTime start =
+            DateTime(day.year, day.month, day.day, t.hour, t.minute);
+        final DateTime end = start.add(const Duration(hours: 1));
+        result.add(CourtSlot(
+          id: 'slot-tennis-${dayOffset}-${t.hour}',
+          venueId: tennisVenueId,
+          sportId: tennisSportId,
+          startAt: start,
+          endAt: end,
+          capacity: 1,
+          isOpen: true,
+        ));
+      }
+    }
+    return result;
+  }
+
+  static List<SlotRequest> generateSlotRequests({DateTime? from}) {
+    final DateTime base = from ?? DateTime.now();
+    final DateTime today = DateTime(base.year, base.month, base.day);
+    final DateTime tomorrow = today.add(const Duration(days: 1));
+    // Pre-existing competing requests on tomorrow's 6 PM slot, so the admin
+    // dashboard shows a non-trivial decision out of the box.
+    return <SlotRequest>[
+      SlotRequest(
+        id: 'req-seed-1',
+        slotId: 'slot-tennis-1-18',
+        userId: 'user-002',
+        status: SlotRequestStatus.pending,
+        notes: 'Singles practice with coach.',
+        createdAt: tomorrow.subtract(const Duration(hours: 18)),
+        decidedAt: null,
+        decidedBy: null,
+      ),
+      SlotRequest(
+        id: 'req-seed-2',
+        slotId: 'slot-tennis-1-18',
+        userId: 'user-003',
+        status: SlotRequestStatus.pending,
+        notes: 'Doubles with the sales team.',
+        createdAt: tomorrow.subtract(const Duration(hours: 17)),
+        decidedAt: null,
+        decidedBy: null,
+      ),
+    ];
+  }
 }

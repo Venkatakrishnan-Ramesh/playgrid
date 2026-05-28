@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/admin_screens.dart';
 import '../../features/auth/domain/playgrid_controller.dart';
 import '../../features/auth/presentation/auth_screens.dart';
+import '../../features/tennis/presentation/tennis_booking_screen.dart';
 import '../../features/events/presentation/events_screen.dart';
 import '../../features/friends/presentation/friends_screen.dart';
 import '../../features/games/presentation/game_screens.dart';
@@ -161,6 +162,21 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.adminVenues,
         name: 'adminVenues',
         builder: (_, __) => const ManageVenuesScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.adminRequests,
+        name: 'adminRequests',
+        builder: (_, __) => const AdminSlotRequestsScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.adminSlots,
+        name: 'adminSlots',
+        builder: (_, __) => const AdminSlotManagerScreen(),
+      ),
+      GoRoute(
+        path: RoutePaths.tennis,
+        name: 'tennis',
+        builder: (_, __) => const TennisBookingScreen(),
       ),
       GoRoute(
         path: RoutePaths.settings,

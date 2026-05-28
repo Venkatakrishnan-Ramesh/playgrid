@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,6 +35,19 @@ class PlayGridController extends ChangeNotifier {
   final PlayGridRepository _repository;
   PlayGridState _state = const PlayGridState.initial();
 
+  /// Realtime subscription tied to the current session. Re-created on every
+  /// successful sign-in / bootstrap; cancelled on sign-out and dispose.
+  StreamSubscription<void>? _changesSub;
+
+  /// Debouncer for realtime ticks — a single admin approve typically writes
+  /// 1 request update + N sibling updates + N notifications + 1 booking, so
+  /// we coalesce that burst into a single bootstrap.
+  Timer? _refreshDebounce;
+
+  /// Guards against re-entrant realtime refreshes while another fetch is
+  /// already in flight (e.g. the user pulled to refresh at the same moment).
+  bool _refreshInFlight = false;
+
   PlayGridState get state => _state;
   AppUserProfile? get currentUser => _state.profile;
   List<Sport> get sports => _state.sports;
@@ -61,6 +76,7 @@ class PlayGridController extends ChangeNotifier {
     final PlayGridSession session = await _authService.currentSession();
     final PlayGridState data = await _repository.bootstrap(session: session);
     _setState = data.copyWith(loading: false);
+    _attachRealtime(session);
   }
 
   /// Re-fetches everything for the current session (pull-to-refresh).
@@ -69,6 +85,57 @@ class PlayGridController extends ChangeNotifier {
     final PlayGridState data =
         await _repository.bootstrap(session: _state.session);
     _setState = data.copyWith(loading: false);
+  }
+
+  /// Silent variant used by realtime ticks — no loading spinner, no message
+  /// churn, just swap the data in place. Reuses [refresh]'s semantics
+  /// otherwise.
+  Future<void> _refreshFromRealtime() async {
+    if (_refreshInFlight || !_state.session.isAuthenticated) {
+      return;
+    }
+    _refreshInFlight = true;
+    try {
+      final PlayGridState data =
+          await _repository.bootstrap(session: _state.session);
+      _state = data.copyWith(
+        loading: _state.loading,
+        message: _state.message,
+      );
+      notifyListeners();
+    } on Object catch (error, stack) {
+      // A failed background refresh shouldn't crash the app or interrupt the
+      // user; surface for debugging and try again on the next event.
+      debugPrint('Realtime refresh failed: $error\n$stack');
+    } finally {
+      _refreshInFlight = false;
+    }
+  }
+
+  void _attachRealtime(PlayGridSession session) {
+    _detachRealtime();
+    if (!session.isAuthenticated) {
+      return;
+    }
+    _changesSub =
+        _repository.watchChanges(session: session).listen((_) {
+      _refreshDebounce?.cancel();
+      _refreshDebounce =
+          Timer(const Duration(milliseconds: 250), _refreshFromRealtime);
+    });
+  }
+
+  void _detachRealtime() {
+    _refreshDebounce?.cancel();
+    _refreshDebounce = null;
+    _changesSub?.cancel();
+    _changesSub = null;
+  }
+
+  @override
+  void dispose() {
+    _detachRealtime();
+    super.dispose();
   }
 
   Future<void> signIn({
@@ -82,6 +149,7 @@ class PlayGridController extends ChangeNotifier {
         password: password,
       );
       _setState = await _repository.bootstrap(session: session);
+      _attachRealtime(session);
     } on AppFailure catch (error) {
       _setState = _state.copyWith(message: error.message, loading: false);
       rethrow;
@@ -104,6 +172,7 @@ class PlayGridController extends ChangeNotifier {
         password: password,
       );
       _setState = await _repository.bootstrap(session: session);
+      _attachRealtime(session);
     } on AppFailure catch (error) {
       _setState = _state.copyWith(message: error.message, loading: false);
       rethrow;
@@ -118,6 +187,7 @@ class PlayGridController extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
+    _detachRealtime();
     await _authService.signOut();
     final PlayGridSession session = await _authService.currentSession();
     _setState = await _repository.bootstrap(session: session);
@@ -323,5 +393,80 @@ class PlayGridController extends ChangeNotifier {
       session: _state.session,
       reason: reason,
     );
+  }
+
+  // --- Court slots & requests ---------------------------------------------
+
+  Future<void> requestSlot({
+    required String slotId,
+    required String notes,
+  }) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.requestSlot(
+      session: _state.session,
+      slotId: slotId,
+      notes: notes,
+    );
+    _setState = updated.copyWith(loading: false);
+  }
+
+  Future<void> cancelSlotRequest(String requestId) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.cancelSlotRequest(
+      session: _state.session,
+      requestId: requestId,
+    );
+    _setState = updated.copyWith(loading: false);
+  }
+
+  Future<void> approveSlotRequest(String requestId) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.approveSlotRequest(
+      session: _state.session,
+      requestId: requestId,
+    );
+    _setState = updated.copyWith(loading: false);
+  }
+
+  Future<void> rejectSlotRequest(String requestId, {String? reason}) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.rejectSlotRequest(
+      session: _state.session,
+      requestId: requestId,
+      reason: reason,
+    );
+    _setState = updated.copyWith(loading: false);
+  }
+
+  Future<void> addCourtSlots({
+    required String venueId,
+    required String sportId,
+    required DateTime startDate,
+    required DateTime endDate,
+    required List<TimeOfDayValue> startTimes,
+    required Duration duration,
+    int capacity = 1,
+  }) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.addCourtSlots(
+      session: _state.session,
+      venueId: venueId,
+      sportId: sportId,
+      startDate: startDate,
+      endDate: endDate,
+      startTimes: startTimes,
+      duration: duration,
+      capacity: capacity,
+    );
+    _setState = updated.copyWith(loading: false);
+  }
+
+  Future<void> removeCourtSlot(String slotId) async {
+    _setState = _state.copyWith(loading: true);
+    final PlayGridState updated = await _repository.removeCourtSlot(
+      session: _state.session,
+      slotId: slotId,
+    );
+    _setState = updated.copyWith(loading: false);
   }
 }

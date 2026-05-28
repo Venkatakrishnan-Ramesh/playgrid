@@ -18,8 +18,22 @@ class MockAuthService implements AuthService {
     required String email,
     required String password,
   }) async {
-    if (email.trim().isEmpty || password.trim().length < 6) {
+    final String normalized = email.trim().toLowerCase();
+    if (normalized.isEmpty || password.trim().length < 6) {
       throw const AppFailure('Enter valid credentials to continue.');
+    }
+    for (final ({String email, String userId, UserRole role, String name}) acc
+        in PlayGridMockData.knownAccounts) {
+      if (acc.email.toLowerCase() == normalized) {
+        _session = PlayGridSession(
+          userId: acc.userId,
+          email: acc.email,
+          isAuthenticated: true,
+          profileComplete: true,
+          role: acc.role,
+        );
+        return _session;
+      }
     }
     _session = PlayGridMockData.memberSession.copyWith(email: email.trim());
     return _session;

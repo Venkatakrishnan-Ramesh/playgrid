@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../../core/config/app_config.dart';
@@ -87,6 +89,8 @@ class SupabasePlayGridRepository implements PlayGridRepository {
               .map(SupabaseMappers.notification)
               .toList(growable: false);
       final List<AppUserProfile> members = await _loadMembers();
+      final List<CourtSlot> courtSlots = await _loadCourtSlots();
+      final List<SlotRequest> slotRequests = await _loadSlotRequests();
 
       return PlayGridState(
         session: session.copyWith(
@@ -109,12 +113,35 @@ class SupabasePlayGridRepository implements PlayGridRepository {
         // for now; there is no `venue_slots` table in the schema.
         venueSlots: const <VenueSlot>[],
         members: members,
+        courtSlots: courtSlots,
+        slotRequests: slotRequests,
         loading: false,
         message:
             profile == null ? 'Complete your profile to continue.' : 'Loaded.',
       );
     } on sb.PostgrestException catch (error) {
       throw AppFailure(error.message);
+    }
+  }
+
+  Future<List<CourtSlot>> _loadCourtSlots() async {
+    try {
+      final rows =
+          await _loadList('court_slots', orderBy: 'start_at');
+      return rows.map(SupabaseMappers.courtSlot).toList(growable: false);
+    } on sb.PostgrestException {
+      // Table not yet migrated; return empty so the rest of the app still works.
+      return const <CourtSlot>[];
+    }
+  }
+
+  Future<List<SlotRequest>> _loadSlotRequests() async {
+    try {
+      final rows =
+          await _loadList('slot_requests', orderBy: 'created_at');
+      return rows.map(SupabaseMappers.slotRequest).toList(growable: false);
+    } on sb.PostgrestException {
+      return const <SlotRequest>[];
     }
   }
 
@@ -649,6 +676,223 @@ class SupabasePlayGridRepository implements PlayGridRepository {
       return refreshed.copyWith(message: 'Deletion request submitted.');
     } on sb.PostgrestException catch (error) {
       throw AppFailure(error.message);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Court slots & slot requests
+  //
+  // Requires the `court_slots` and `slot_requests` tables from migration
+  // `002_court_slots.sql`. If those tables are missing the queries throw a
+  // PostgrestException which is surfaced as an [AppFailure] for the UI.
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<PlayGridState> requestSlot({
+    required PlayGridSession session,
+    required String slotId,
+    required String notes,
+  }) async {
+    try {
+      await _client.from('slot_requests').insert(<String, dynamic>{
+        'slot_id': slotId,
+        'user_id': session.userId,
+        'status': 'pending',
+        'notes': notes.trim(),
+      });
+      final PlayGridState refreshed = await bootstrap(session: session);
+      return refreshed.copyWith(
+          message: 'Request submitted. Waiting for admin approval.');
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> cancelSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+  }) async {
+    try {
+      await _client
+          .from('slot_requests')
+          .update(<String, dynamic>{
+            'status': 'cancelled',
+            'decided_at': DateTime.now().toUtc().toIso8601String(),
+            'decided_by': session.userId,
+          })
+          .eq('id', requestId)
+          .eq('user_id', session.userId)
+          .eq('status', 'pending');
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> approveSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+  }) async {
+    try {
+      // Delegate the multi-step approval (mark approved, auto-reject siblings,
+      // mint the booking, send notifications) to a server-side function so
+      // the operation is transactional under RLS.
+      await _client.rpc('approve_slot_request', params: <String, dynamic>{
+        'request_id': requestId,
+      });
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> rejectSlotRequest({
+    required PlayGridSession session,
+    required String requestId,
+    String? reason,
+  }) async {
+    try {
+      await _client.rpc('reject_slot_request', params: <String, dynamic>{
+        'request_id': requestId,
+        'reason': (reason ?? '').trim(),
+      });
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> addCourtSlots({
+    required PlayGridSession session,
+    required String venueId,
+    required String sportId,
+    required DateTime startDate,
+    required DateTime endDate,
+    required List<TimeOfDayValue> startTimes,
+    required Duration duration,
+    int capacity = 1,
+  }) async {
+    if (startTimes.isEmpty) {
+      throw const AppFailure('Pick at least one start time.');
+    }
+    if (duration.inMinutes <= 0) {
+      throw const AppFailure('Duration must be positive.');
+    }
+    if (endDate.isBefore(startDate)) {
+      throw const AppFailure('End date must be on or after the start date.');
+    }
+    final List<Map<String, dynamic>> rows = <Map<String, dynamic>>[];
+    final DateTime startDay =
+        DateTime(startDate.year, startDate.month, startDate.day);
+    final DateTime endDay =
+        DateTime(endDate.year, endDate.month, endDate.day);
+    for (DateTime day = startDay;
+        !day.isAfter(endDay);
+        day = day.add(const Duration(days: 1))) {
+      for (final TimeOfDayValue t in startTimes) {
+        final DateTime start =
+            DateTime(day.year, day.month, day.day, t.hour, t.minute);
+        final DateTime end = start.add(duration);
+        rows.add(<String, dynamic>{
+          'venue_id': venueId,
+          'sport_id': sportId,
+          'start_at': start.toUtc().toIso8601String(),
+          'end_at': end.toUtc().toIso8601String(),
+          'capacity': capacity,
+          'is_open': true,
+        });
+      }
+    }
+    try {
+      // `on_conflict` skips slots that already exist for this (venue, sport,
+      // start_at) — see the unique index in migration 002.
+      await _client
+          .from('court_slots')
+          .upsert(rows, onConflict: 'venue_id,sport_id,start_at',
+              ignoreDuplicates: true);
+      final PlayGridState refreshed = await bootstrap(session: session);
+      return refreshed.copyWith(
+          message: 'Published ${rows.length} slot candidates.');
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  @override
+  Future<PlayGridState> removeCourtSlot({
+    required PlayGridSession session,
+    required String slotId,
+  }) async {
+    try {
+      await _client.rpc('remove_court_slot', params: <String, dynamic>{
+        'slot_id': slotId,
+      });
+      return bootstrap(session: session);
+    } on sb.PostgrestException catch (error) {
+      throw AppFailure(error.message);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Realtime
+  //
+  // Subscribes to the tables that drive the booking/admin screens and emits
+  // a tick whenever any of them change. RLS on these tables ensures members
+  // only get events they're allowed to see (their own slot_requests, their
+  // own notifications/bookings), while admins receive everything. The caller
+  // is expected to debounce and call [bootstrap] in response.
+  //
+  // Requires the tables to be in the `supabase_realtime` publication — see
+  // the end of migration `002_court_slots.sql`.
+  // ---------------------------------------------------------------------------
+
+  @override
+  Stream<void> watchChanges({required PlayGridSession session}) {
+    if (!session.isAuthenticated) {
+      return const Stream<void>.empty();
+    }
+    final StreamController<void> controller =
+        StreamController<void>.broadcast();
+    final sb.RealtimeChannel channel = _client
+        .channel('playgrid:realtime:${session.userId}')
+        ..onPostgresChanges(
+          event: sb.PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'court_slots',
+          callback: (_) => _safeAdd(controller),
+        )
+        ..onPostgresChanges(
+          event: sb.PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'slot_requests',
+          callback: (_) => _safeAdd(controller),
+        )
+        ..onPostgresChanges(
+          event: sb.PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'bookings',
+          callback: (_) => _safeAdd(controller),
+        )
+        ..onPostgresChanges(
+          event: sb.PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifications',
+          callback: (_) => _safeAdd(controller),
+        );
+    channel.subscribe();
+    controller.onCancel = () async {
+      await _client.removeChannel(channel);
+    };
+    return controller.stream;
+  }
+
+  static void _safeAdd(StreamController<void> c) {
+    if (!c.isClosed) {
+      c.add(null);
     }
   }
 }

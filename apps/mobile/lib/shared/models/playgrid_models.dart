@@ -80,6 +80,126 @@ enum FriendshipStatus { pending, accepted, declined }
 
 enum ParticipantStatus { invited, going, declined }
 
+/// Lifecycle of a court-slot request made by a member.
+///
+/// `pending` → waiting on admin review.
+/// `approved` → admin accepted this request (other competing requests for the
+/// same slot are auto-rejected).
+/// `rejected` → admin explicitly rejected, OR auto-rejected when a sibling
+/// request for the same slot was approved.
+/// `cancelled` → the requester withdrew before review.
+enum SlotRequestStatus { pending, approved, rejected, cancelled }
+
+extension SlotRequestStatusLabel on SlotRequestStatus {
+  String get label => switch (this) {
+        SlotRequestStatus.pending => 'Pending',
+        SlotRequestStatus.approved => 'Approved',
+        SlotRequestStatus.rejected => 'Rejected',
+        SlotRequestStatus.cancelled => 'Cancelled',
+      };
+}
+
+/// A court-slot template published by an admin (members request these).
+class CourtSlot {
+  const CourtSlot({
+    required this.id,
+    required this.venueId,
+    required this.sportId,
+    required this.startAt,
+    required this.endAt,
+    required this.capacity,
+    required this.isOpen,
+  });
+
+  final String id;
+  final String venueId;
+  final String sportId;
+  final DateTime startAt;
+  final DateTime endAt;
+
+  /// Soft capacity: how many concurrent approvals the admin allows for this
+  /// slot. Defaults to 1 (single-court / single-booking slot).
+  final int capacity;
+
+  /// Whether the slot is still open for requests (admins can close it without
+  /// deleting it).
+  final bool isOpen;
+
+  String get label {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(startAt.hour)}:${two(startAt.minute)} - '
+        '${two(endAt.hour)}:${two(endAt.minute)}';
+  }
+
+  CourtSlot copyWith({
+    String? id,
+    String? venueId,
+    String? sportId,
+    DateTime? startAt,
+    DateTime? endAt,
+    int? capacity,
+    bool? isOpen,
+  }) {
+    return CourtSlot(
+      id: id ?? this.id,
+      venueId: venueId ?? this.venueId,
+      sportId: sportId ?? this.sportId,
+      startAt: startAt ?? this.startAt,
+      endAt: endAt ?? this.endAt,
+      capacity: capacity ?? this.capacity,
+      isOpen: isOpen ?? this.isOpen,
+    );
+  }
+}
+
+/// A member's request to claim a [CourtSlot].
+class SlotRequest {
+  const SlotRequest({
+    required this.id,
+    required this.slotId,
+    required this.userId,
+    required this.status,
+    required this.notes,
+    required this.createdAt,
+    required this.decidedAt,
+    required this.decidedBy,
+  });
+
+  final String id;
+  final String slotId;
+  final String userId;
+  final SlotRequestStatus status;
+  final String notes;
+  final DateTime createdAt;
+  final DateTime? decidedAt;
+  final String? decidedBy;
+
+  bool get isPending => status == SlotRequestStatus.pending;
+  bool get isApproved => status == SlotRequestStatus.approved;
+
+  SlotRequest copyWith({
+    String? id,
+    String? slotId,
+    String? userId,
+    SlotRequestStatus? status,
+    String? notes,
+    DateTime? createdAt,
+    DateTime? decidedAt,
+    String? decidedBy,
+  }) {
+    return SlotRequest(
+      id: id ?? this.id,
+      slotId: slotId ?? this.slotId,
+      userId: userId ?? this.userId,
+      status: status ?? this.status,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      decidedAt: decidedAt ?? this.decidedAt,
+      decidedBy: decidedBy ?? this.decidedBy,
+    );
+  }
+}
+
 class Friendship {
   const Friendship({
     required this.id,
@@ -497,6 +617,8 @@ class PlayGridState {
     this.members = const <AppUserProfile>[],
     this.friendships = const <Friendship>[],
     this.bookingParticipants = const <BookingParticipant>[],
+    this.courtSlots = const <CourtSlot>[],
+    this.slotRequests = const <SlotRequest>[],
     required this.loading,
     required this.message,
   });
@@ -518,6 +640,12 @@ class PlayGridState {
   final List<AppUserProfile> members;
   final List<Friendship> friendships;
   final List<BookingParticipant> bookingParticipants;
+
+  /// Admin-published bookable slots (currently tennis-only in the seed).
+  final List<CourtSlot> courtSlots;
+
+  /// All slot requests across all users. UI filters by user/admin as needed.
+  final List<SlotRequest> slotRequests;
   final bool loading;
   final String message;
 
@@ -537,6 +665,8 @@ class PlayGridState {
         members = const <AppUserProfile>[],
         friendships = const <Friendship>[],
         bookingParticipants = const <BookingParticipant>[],
+        courtSlots = const <CourtSlot>[],
+        slotRequests = const <SlotRequest>[],
         loading = false,
         message = '';
 
@@ -556,6 +686,8 @@ class PlayGridState {
     List<AppUserProfile>? members,
     List<Friendship>? friendships,
     List<BookingParticipant>? bookingParticipants,
+    List<CourtSlot>? courtSlots,
+    List<SlotRequest>? slotRequests,
     bool? loading,
     String? message,
   }) {
@@ -575,6 +707,8 @@ class PlayGridState {
       members: members ?? this.members,
       friendships: friendships ?? this.friendships,
       bookingParticipants: bookingParticipants ?? this.bookingParticipants,
+      courtSlots: courtSlots ?? this.courtSlots,
+      slotRequests: slotRequests ?? this.slotRequests,
       loading: loading ?? this.loading,
       message: message ?? this.message,
     );
@@ -733,4 +867,104 @@ class PlayGridState {
         .toList()
       ..sort((Booking a, Booking b) => a.startAt.compareTo(b.startAt));
   }
+
+  // --- Court slots & requests ----------------------------------------------
+
+  /// All open slots for [sportId] that haven't already passed, sorted by
+  /// start time.
+  List<CourtSlot> openSlotsForSport(String sportId, {DateTime? now}) {
+    final DateTime cutoff = now ?? DateTime.now();
+    return courtSlots
+        .where((CourtSlot slot) =>
+            slot.sportId == sportId &&
+            slot.isOpen &&
+            slot.startAt.isAfter(cutoff))
+        .toList()
+      ..sort((CourtSlot a, CourtSlot b) => a.startAt.compareTo(b.startAt));
+  }
+
+  /// All slots for [sportId] on a specific calendar day (any status), sorted.
+  List<CourtSlot> slotsForSportOn(String sportId, DateTime day) {
+    return courtSlots
+        .where((CourtSlot slot) =>
+            slot.sportId == sportId && _sameLocalDay(slot.startAt, day))
+        .toList()
+      ..sort((CourtSlot a, CourtSlot b) => a.startAt.compareTo(b.startAt));
+  }
+
+  /// Calendar days (yyyy-mm-dd, local) on which any slot exists for [sportId].
+  List<DateTime> slotDaysForSport(String sportId) {
+    final Set<String> seen = <String>{};
+    final List<DateTime> result = <DateTime>[];
+    for (final CourtSlot slot in courtSlots) {
+      if (slot.sportId != sportId) {
+        continue;
+      }
+      final DateTime day = DateTime(
+          slot.startAt.year, slot.startAt.month, slot.startAt.day);
+      final String key = '${day.year}-${day.month}-${day.day}';
+      if (seen.add(key)) {
+        result.add(day);
+      }
+    }
+    result.sort();
+    return result;
+  }
+
+  List<SlotRequest> requestsForSlot(String slotId) {
+    return slotRequests
+        .where((SlotRequest r) => r.slotId == slotId)
+        .toList()
+      ..sort((SlotRequest a, SlotRequest b) =>
+          a.createdAt.compareTo(b.createdAt));
+  }
+
+  List<SlotRequest> pendingRequestsForSlot(String slotId) {
+    return requestsForSlot(slotId)
+        .where((SlotRequest r) => r.isPending)
+        .toList(growable: false);
+  }
+
+  List<SlotRequest> approvedRequestsForSlot(String slotId) {
+    return requestsForSlot(slotId)
+        .where((SlotRequest r) => r.isApproved)
+        .toList(growable: false);
+  }
+
+  SlotRequest? requestBy(String slotId, String userId) {
+    for (final SlotRequest r in slotRequests) {
+      if (r.slotId == slotId && r.userId == userId) {
+        return r;
+      }
+    }
+    return null;
+  }
+
+  /// All requests made by [userId] still in flight or recently decided,
+  /// newest first.
+  List<SlotRequest> requestsByUser(String userId) {
+    return slotRequests
+        .where((SlotRequest r) => r.userId == userId)
+        .toList()
+      ..sort((SlotRequest a, SlotRequest b) =>
+          b.createdAt.compareTo(a.createdAt));
+  }
+
+  /// Slot ids that still need admin attention (have ≥1 pending request and
+  /// the slot is open), sorted by earliest start time.
+  List<CourtSlot> slotsAwaitingAdmin() {
+    final Set<String> pendingSlotIds = <String>{};
+    for (final SlotRequest r in slotRequests) {
+      if (r.isPending) {
+        pendingSlotIds.add(r.slotId);
+      }
+    }
+    return courtSlots
+        .where((CourtSlot s) => pendingSlotIds.contains(s.id))
+        .toList()
+      ..sort((CourtSlot a, CourtSlot b) => a.startAt.compareTo(b.startAt));
+  }
+
+  bool _sameLocalDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 }

@@ -22,6 +22,9 @@ class RoutePaths {
   static const String notifications = '/notifications';
   static const String admin = '/admin';
   static const String adminVenues = '/admin/venues';
+  static const String adminRequests = '/admin/requests';
+  static const String adminSlots = '/admin/slots';
+  static const String tennis = '/tennis';
   static const String settings = '/settings';
   static const String privacyPolicy = '/settings/privacy-policy';
   static const String accountDeletion = '/settings/account-deletion';

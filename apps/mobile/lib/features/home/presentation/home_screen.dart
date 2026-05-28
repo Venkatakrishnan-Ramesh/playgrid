@@ -68,6 +68,20 @@ class HomeScreen extends ConsumerWidget {
               runSpacing: 12,
               children: <Widget>[
                 _HomeActionCard(
+                  title: 'Tennis bookings',
+                  subtitle: 'Request a tennis slot',
+                  icon: Icons.sports_tennis_outlined,
+                  onTap: () => context.push(RoutePaths.tennis),
+                ),
+                if (state.session.isAdmin ||
+                    (state.profile?.isAdmin ?? false))
+                  _HomeActionCard(
+                    title: 'Admin dashboard',
+                    subtitle: 'Review requests & slots',
+                    icon: Icons.admin_panel_settings_outlined,
+                    onTap: () => context.push(RoutePaths.admin),
+                  ),
+                _HomeActionCard(
                   title: 'Book a Slot',
                   subtitle: 'Reserve courts and turf',
                   icon: Icons.calendar_month_outlined,
